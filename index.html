@@ -117,6 +117,7 @@ input,textarea,select{color:var(--white);background:rgba(0,0,0,.62);border:2px s
         <button class="btn" id="btnStartNo">いいえ</button>
       </div>
     </div>
+    <button class="btn small mt" id="btnResetData">データ初期化</button>
   </section>
 
   <section class="screen center" id="screenName">
@@ -188,11 +189,11 @@ input,textarea,select{color:var(--white);background:rgba(0,0,0,.62);border:2px s
 <script>
 window.GuildStorage = (() => {
   const keys = {
-    settings:"otakuba.v3.settings",
-    menu:"otakuba.v3.menu",
-    monsters:"otakuba.v3.monsters",
-    state:"otakuba.v3.state",
-    battle:"otakuba.v3.battle"
+    settings:"otakuba.v303.settings",
+    menu:"otakuba.v303.menu",
+    monsters:"otakuba.v303.monsters",
+    state:"otakuba.v303.state",
+    battle:"otakuba.v303.battle"
   };
   const DEFAULT_SETTINGS = {
   "guildName": "おたく場ギルド",
@@ -704,11 +705,11 @@ window.GuildApp = (() => {
     $(id).classList.add("active");
   }
 
-  function getName(){ return name || localStorage.getItem("otakuba.v3.name") || "冒険者"; }
+  function getName(){ return name || localStorage.getItem("otakuba.v303.name") || "冒険者"; }
 
   async function init(){
     data = await GuildStorage.init();
-    name = localStorage.getItem("otakuba.v3.name") || "";
+    name = localStorage.getItem("otakuba.v303.name") || "";
     GuildBattle.init(data.monsters);
     GuildMenu.init(data);
 
@@ -725,7 +726,7 @@ window.GuildApp = (() => {
     $("btnNameOk").onclick = () => {
       const v = $("nameInput").value.trim();
       if(!v) return;
-      name = v; localStorage.setItem("otakuba.v3.name", name);
+      name = v; localStorage.setItem("otakuba.v303.name", name);
       applyName();
       GuildAudio.play("ok");
       show("screenMenu");
@@ -736,13 +737,17 @@ window.GuildApp = (() => {
 
   function applyName(){
     $("adventurerName").textContent = getName();
-    const visits = Number(localStorage.getItem("otakuba.v3.visits") || "1");
+    const visits = Number(localStorage.getItem("otakuba.v303.visits") || "1");
     $("levelBadge").textContent = `Lv.${Math.max(1, visits)}`;
   }
 
   return {init, show, getName};
 })();
 document.addEventListener("DOMContentLoaded", GuildApp.init);
+setTimeout(()=>{
+  const b=document.getElementById("btnResetData");
+  if(b){b.onclick=()=>{Object.keys(localStorage).filter(k=>k.startsWith("otakuba.")).forEach(k=>localStorage.removeItem(k)); location.reload();};}
+},300);
 
 </script>
 </body>

@@ -1,30 +1,12 @@
-# おたく場ギルド v3.0.2 singlefile
+# おたく場ギルド v3.0.3 reset
 
-CSS/JS/JSONが読み込まれない問題を避けるため、
-index.html と admin.html にCSS/JS/JSONを全部内蔵した版です。
+v3.0.2で古い管理データ/localStorageを読んでメニューが1件だけになる問題を回避した版です。
 
-## GitHubへアップロード
-このZIPを解凍して、中身を全部リポジトリ直下へ上書きしてください。
-
-## 必須
-- index.html
-- admin.html
-- 画像ファイル（*.png）
-
-## 不要になったもの
-- main.css
-- menu.css
-- battle.css
-- effects.css
-- app.js
-- menu.js
-- battle.js
-- storage.js
-- menu.json
-- monsters.json
-- settings.json
-
-残っていても害はありません。
+## 使い方
+ZIPを解凍して、中身をGitHub直下に全部上書きしてください。
 
 ## 確認URL
-https://hayate19980821.github.io/otakuba_guild/?v=302
+https://hayate19980821.github.io/otakuba_guild/?v=303
+
+## 管理画面
+https://hayate19980821.github.io/otakuba_guild/admin.html?v=303
