@@ -1,20 +1,22 @@
-# stable-battle-v1
+# otakuba-guild-stable-battle-v2
 
-完成度が高かった index(20).html / admin(7).html を土台にした改造版です。
+index(20).html / admin(7).html を土台にした安定改造版。
 
-## 内容
-- 通常時は元のメニュー画面を維持
-- 受注する/注文する を押した時だけ戦闘演出
+## 変更点
+- 戦闘演出を長めに変更
+- 受注時だけ戦闘背景へ切替
 - 注文金額 = ダメージ
 - 撃破した時だけ「撃破！」表示
-- 撃破していない時はダメージだけ
-- 経験値・獲得物なし
-- 画像はGitHub直下の既存ファイル名を使用
-  - slime.png, goblin.png, gargoyle.png, dragon.png など
-  - grass.png, forest.png, ruins.png, castle.png など
+- 撃破していない時は撃破表示なし
+- 管理画面の討伐設定に背景選択を追加
+- 敵設定を初期 #15 まで追加
+- 画像・背景はGitHub直下の既存ファイル名を使用
 
-## GitHub
-index.html と admin.html を上書きしてください。
+## アップロード
+GitHubで index.html と admin.html だけ上書き。
 
-確認:
-https://hayate19980821.github.io/otakuba_guild/?v=stable1
+## 確認URL
+https://hayate19980821.github.io/otakuba_guild/?v=stable2
+
+## 管理画面
+https://hayate19980821.github.io/otakuba_guild/admin.html?v=stable2
