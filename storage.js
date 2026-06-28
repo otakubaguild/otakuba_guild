@@ -18,9 +18,9 @@ window.GuildStorage = (() => {
   }
   function set(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
   async function init(){
-    const settings = get(keys.settings, await fetchJson("data/settings.json", {}));
-    const menu = get(keys.menu, await fetchJson("data/menu.json", []));
-    const monsters = get(keys.monsters, await fetchJson("data/monsters.json", []));
+    const settings = get(keys.settings, await fetchJson("settings.json", {}));
+    const menu = get(keys.menu, await fetchJson("menu.json", []));
+    const monsters = get(keys.monsters, await fetchJson("monsters.json", []));
     set(keys.settings, settings); set(keys.menu, menu); set(keys.monsters, monsters);
     return {settings, menu, monsters};
   }

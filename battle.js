@@ -12,8 +12,8 @@ window.GuildBattle = (() => {
   }
   function save(){ GuildStorage.set(GuildStorage.keys.battle, state); }
   function current(){ return monsters[Math.min(state.index, monsters.length - 1)] || monsters[0]; }
-  function bgPath(m){ return `images/backgrounds/${m.background}`; }
-  function monsterPath(m){ return `images/monsters/${m.image}`; }
+  function bgPath(m){ return `${m.background}`; }
+  function monsterPath(m){ return `${m.image}`; }
 
   function setBackground(m){
     const bg = document.getElementById("appBg");

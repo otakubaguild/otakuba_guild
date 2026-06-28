@@ -32,7 +32,7 @@ window.GuildMenu = (() => {
     items.forEach(item => {
       const card = document.createElement("div");
       card.className = "product";
-      const img = item.image ? `<img src="images/menu/${item.image}" alt="">` : item.icon || "🍽️";
+      const img = item.image ? `<img src="${item.image}" alt="">` : item.icon || "🍽️";
       card.innerHTML = `
         <div class="product-img">${img}</div>
         <div class="product-title">${item.name}</div>
