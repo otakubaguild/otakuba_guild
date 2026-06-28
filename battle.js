@@ -1,211 +1,101 @@
-/* おたく場ギルド 討伐システムβ v6 */
-(function(){
-  "use strict";
+window.GuildBattle = (() => {
+  let monsters = [];
+  let state = null;
 
-  const STORAGE_KEY = "otakubaBattle.v1";
-
-  const ENEMIES = [
-    { id:"slime", name:"スライム", hp:500, stage:"草原", bg:"grass.png", image:"slime.png", icon:"🟢" },
-    { id:"goblin_1", name:"ゴブリン 1/3", hp:500, stage:"森", bg:"forest.png", image:"goblin.png", icon:"👺" },
-    { id:"goblin_2", name:"ゴブリン 2/3", hp:500, stage:"森", bg:"forest.png", image:"goblin.png", icon:"👺" },
-    { id:"goblin_3", name:"ゴブリン 3/3", hp:500, stage:"森", bg:"forest.png", image:"goblin.png", icon:"👺" },
-    { id:"orc_1", name:"オーク 1/2", hp:2500, stage:"山", bg:"mountain.png", image:"orc.png", icon:"🪓" },
-    { id:"orc_2", name:"オーク 2/2", hp:2500, stage:"山", bg:"mountain.png", image:"orc.png", icon:"🪓" },
-    { id:"skeleton_1", name:"スケルトン 1/2", hp:1000, stage:"洞窟", bg:"cave.png", image:"skeleton.png", icon:"💀" },
-    { id:"skeleton_2", name:"スケルトン 2/2", hp:1000, stage:"洞窟", bg:"cave.png", image:"skeleton.png", icon:"💀" },
-    { id:"mimic_1", name:"ミミック 1/2", hp:2500, stage:"洞窟", bg:"cave.png", image:"mimic.png", icon:"📦" },
-    { id:"mimic_2", name:"ミミック 2/2", hp:2500, stage:"洞窟", bg:"cave.png", image:"mimic.png", icon:"📦" },
-    { id:"gargoyle", name:"ガーゴイル", hp:5000, stage:"遺跡", bg:"ruins.png", image:"gargoyle.png", icon:"🗿" },
-    { id:"dark_wizard", name:"ダークウィザード", hp:10000, stage:"遺跡", bg:"ruins.png", image:"dark_wizard.png", icon:"🧙" },
-    { id:"minotaur", name:"ミノタウロス", hp:10000, stage:"火山", bg:"volcano.png", image:"minotaur.png", icon:"🐂" },
-    { id:"dragon", name:"ドラゴン", hp:15000, stage:"王城前", bg:"castle.png", image:"dragon.png", icon:"🐉" },
-    { id:"maou", name:"魔王", hp:20000, stage:"魔王城 玉座", bg:"castle.png", image:"maou.png", icon:"👑" }
-  ];
-
-  const $ = id => document.getElementById(id);
-
+  function initial(){
+    return {index:0, hp: monsters[0]?.hp || 500, defeated:[], totalDamage:0};
+  }
   function load(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw){
-        const s = JSON.parse(raw);
-        if(Number.isFinite(s.index) && Number.isFinite(s.hp)) return s;
-      }
-    }catch(e){}
-    return { index:0, hp:ENEMIES[0].hp, defeated:[], totalDamage:0, lastLog:"討伐開始！" };
+    state = GuildStorage.get(GuildStorage.keys.battle, null);
+    if(!state || !Number.isFinite(state.index)) state = initial();
+    return state;
   }
-  function save(state){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  function current(state){ return state.index >= ENEMIES.length ? ENEMIES[ENEMIES.length - 1] : (ENEMIES[state.index] || ENEMIES[0]); }
+  function save(){ GuildStorage.set(GuildStorage.keys.battle, state); }
+  function current(){ return monsters[Math.min(state.index, monsters.length - 1)] || monsters[0]; }
+  function bgPath(m){ return `images/backgrounds/${m.background}`; }
+  function monsterPath(m){ return `images/monsters/${m.image}`; }
 
-  function ensurePanel(){
-    let panel = $("battlePanel");
-    if(panel) return panel;
-
-    const menu = $("screenMenu");
-    const tabs = $("tabs") || document.querySelector("#screenMenu .tabs");
-    if(!menu || !tabs) return null;
-
-    panel = document.createElement("div");
-    panel.id = "battlePanel";
-    panel.className = "battle-panel";
-    panel.innerHTML = `
-      <div class="battle-title">
-        <span class="battle-stage-name" id="battleStageName">討伐</span>
-        <span class="battle-enemy-name" id="battleEnemyName">敵</span>
-      </div>
-      <div class="battle-field" id="battleField">
-        <img class="battle-enemy" id="battleEnemyImg" alt="">
-        <div class="battle-fallback hidden" id="battleFallback">⚔️</div>
-      </div>
-      <div class="battle-hp-wrap">
-        <div class="battle-hp-row">
-          <span>HP</span>
-          <span class="battle-hp-text" id="battleHpText">0 / 0</span>
-        </div>
-        <div class="battle-hp-bar"><div class="battle-hp-fill" id="battleHpFill"></div></div>
-      </div>
-      <div class="battle-log" id="battleLog">討伐開始！</div>
-    `;
-    menu.insertBefore(panel, tabs);
-    return panel;
+  function setBackground(m){
+    const bg = document.getElementById("appBg");
+    if(bg && m) bg.style.backgroundImage = `linear-gradient(to bottom,rgba(0,0,0,.02),rgba(0,0,0,.12) 50%,rgba(0,0,0,.78) 86%),url("${bgPath(m)}")`;
   }
 
-  function setAppBackground(enemy){
-    const bg = document.querySelector(".bg");
-    if(!bg || !enemy) return;
-    bg.style.backgroundImage = `linear-gradient(to bottom,rgba(0,0,0,.02) 0%,rgba(0,0,0,.08) 45%,rgba(0,0,0,.72) 82%,rgba(0,0,0,.92)),url("${enemy.bg}")`;
-    bg.style.backgroundPosition = "center top";
-    bg.style.backgroundSize = "cover";
+  function renderBattle(){
+    const m = current();
+    if(!m) return;
+    setBackground(m);
+    const img = document.getElementById("battleEnemy");
+    const fallback = document.getElementById("battleFallback");
+    document.getElementById("battleStage").textContent = m.stage || "";
+    document.getElementById("battleEnemyName").textContent = m.name || "敵";
+    document.getElementById("battleHpText").textContent = `${Math.max(0,state.hp)} / ${m.hp}`;
+    document.getElementById("battleHpFill").style.width = `${Math.max(0,Math.min(100,state.hp/m.hp*100))}%`;
+    img.src = monsterPath(m);
+    img.classList.remove("hidden","battle-hit","battle-defeat");
+    img.onerror = () => { img.classList.add("hidden"); fallback.classList.remove("hidden"); };
+    img.onload = () => fallback.classList.add("hidden");
   }
 
-  function render(){
-    const panel = ensurePanel();
-    if(!panel) return;
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-    const s = load();
-    const e = current(s);
-    const cleared = s.index >= ENEMIES.length;
+  async function attack(amount){
+    load();
+    const before = current();
+    if(!before) return {defeated:false, damage:amount};
 
-    setAppBackground(cleared ? {bg:"castle.png"} : e);
+    renderBattle();
+    const img = document.getElementById("battleEnemy");
+    const damagePop = document.getElementById("damagePop");
+    const defeatPop = document.getElementById("defeatPop");
 
-    const img = $("battleEnemyImg");
-    const fallback = $("battleFallback");
-    const hpText = $("battleHpText");
-    const hpFill = $("battleHpFill");
-    const log = $("battleLog");
+    await sleep(250);
+    img.classList.add("battle-hit");
+    damagePop.textContent = `${amount} DAMAGE!`;
+    damagePop.classList.remove("hidden");
+    GuildAudio.play("hit");
 
-    if(cleared){
-      if(img) img.classList.add("hidden");
-      if(fallback){ fallback.classList.remove("hidden"); fallback.textContent = "🏆"; }
-      if(hpText) hpText.textContent = "CLEAR";
-      if(hpFill) hpFill.style.width = "0%";
-      if(log) log.textContent = "全ての敵を討伐した！";
-      return;
-    }
-
-    if(img){
-      img.src = e.image;
-      img.alt = e.name;
-      img.classList.remove("hidden");
-      img.onerror = function(){
-        img.classList.add("hidden");
-        if(fallback){
-          fallback.classList.remove("hidden");
-          fallback.textContent = e.icon || "⚔️";
-        }
-      };
-      img.onload = function(){
-        if(fallback) fallback.classList.add("hidden");
-      };
-    }
-
-    const hp = Math.max(0, Number(s.hp || e.hp));
-    const max = Number(e.hp || 1);
-    if(hpText) hpText.textContent = `${hp} / ${max}`;
-    if(hpFill) hpFill.style.width = `${Math.max(0, Math.min(100, (hp / max) * 100))}%`;
-    if(log) log.textContent = s.lastLog || "討伐開始！";
-  }
-
-  function popDamage(amount){
-    const field = $("battleField");
-    if(!field) return;
-    const d = document.createElement("div");
-    d.className = "battle-damage";
-    d.textContent = `${amount} DAMAGE!`;
-    field.appendChild(d);
-    setTimeout(()=>d.remove(), 950);
-  }
-
-  function animateHit(defeated){
-    const panel = $("battlePanel");
-    if(!panel) return;
-    panel.classList.remove("hit","defeated");
-    void panel.offsetWidth;
-    panel.classList.add(defeated ? "defeated" : "hit");
-    setTimeout(()=>panel.classList.remove("hit","defeated"), defeated ? 850 : 420);
-  }
-
-  function applyDamage(amount, options){
-    amount = Math.max(0, Number(amount || 0));
-    if(amount <= 0){ render(); return; }
-
-    options = options || {};
-    const showMenu = typeof options.showMenu === "function" ? options.showMenu : null;
-    const showOrders = typeof options.showOrders === "function" ? options.showOrders : null;
-
-    if(showMenu) showMenu();
-    render();
-
-    let s = load();
     let rest = amount;
-    let defeatedNames = [];
-    let didDefeat = false;
-
-    while(rest > 0 && s.index < ENEMIES.length){
-      const e = current(s);
-      if(!Number.isFinite(s.hp) || s.hp <= 0) s.hp = e.hp;
-
-      if(rest >= s.hp){
-        rest -= s.hp;
-        defeatedNames.push(e.name);
-        s.defeated.push({ id:e.id, name:e.name, at:new Date().toISOString() });
-        s.index += 1;
-        didDefeat = true;
-        s.hp = s.index < ENEMIES.length ? ENEMIES[s.index].hp : 0;
+    let defeated = false;
+    while(rest > 0 && state.index < monsters.length){
+      const m = current();
+      if(rest >= state.hp){
+        rest -= state.hp;
+        defeated = true;
+        state.defeated.push({id:m.id,name:m.name,at:new Date().toISOString()});
+        state.index++;
+        if(state.index < monsters.length) state.hp = monsters[state.index].hp;
+        else state.hp = 0;
       }else{
-        s.hp -= rest;
+        state.hp -= rest;
         rest = 0;
       }
     }
+    state.totalDamage += amount;
+    save();
 
-    s.totalDamage = Number(s.totalDamage || 0) + amount;
-    if(defeatedNames.length){
-      s.lastLog = `${amount}ダメージ！ ${defeatedNames.join("、")}を撃破！`;
-      if(rest > 0 && s.index < ENEMIES.length) s.lastLog += ` 余剰${rest}ダメージ！`;
+    await sleep(420);
+    damagePop.classList.add("hidden");
+
+    if(defeated){
+      img.classList.remove("battle-hit");
+      img.classList.add("battle-defeat");
+      defeatPop.classList.remove("hidden");
+      GuildAudio.play("defeat");
+      await sleep(950);
+      defeatPop.classList.add("hidden");
     }else{
-      s.lastLog = `${amount}ダメージ！`;
+      await sleep(350);
     }
 
-    save(s);
-    popDamage(amount);
-    animateHit(didDefeat);
-    setTimeout(render, didDefeat ? 820 : 360);
-    if(showOrders) setTimeout(showOrders, didDefeat ? 1900 : 1400);
+    renderBattle();
+    return {defeated, damage:amount};
   }
 
-  function resetRun(){
-    save({ index:0, hp:ENEMIES[0].hp, defeated:[], totalDamage:0, lastLog:"討伐開始！" });
-    render();
+  function init(data){
+    monsters = data || [];
+    load();
+    renderBattle();
   }
 
-  function init(){
-    ensurePanel();
-    render();
-    document.addEventListener("click", ()=>setTimeout(render,80), true);
-  }
-
-  window.OtakubaBattle = { enemies: ENEMIES, render, applyDamage, resetRun, load };
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  return {init, attack, current, setBackground, load};
 })();

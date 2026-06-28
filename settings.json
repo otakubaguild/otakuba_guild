@@ -1,0 +1,29 @@
+{
+  "guildName": "おたく場ギルド",
+  "currency": "G",
+  "discordWebhookUrl": "",
+  "battleMode": "continue",
+  "adminPassword": "OTAKU",
+  "categories": [
+    {
+      "id": "all",
+      "name": "全部"
+    },
+    {
+      "id": "drink",
+      "name": "酒場"
+    },
+    {
+      "id": "food",
+      "name": "食事"
+    },
+    {
+      "id": "soft",
+      "name": "回復"
+    },
+    {
+      "id": "special",
+      "name": "限定"
+    }
+  ]
+}

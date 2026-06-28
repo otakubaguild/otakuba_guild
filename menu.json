@@ -1,0 +1,74 @@
+[
+  {
+    "id": "beer",
+    "category": "drink",
+    "name": "ビール",
+    "desc": "ギルド定番の一杯。",
+    "price": 700,
+    "icon": "🍺",
+    "image": ""
+  },
+  {
+    "id": "highball",
+    "category": "drink",
+    "name": "ハイボール",
+    "desc": "爽快な一撃。",
+    "price": 650,
+    "icon": "🥃",
+    "image": ""
+  },
+  {
+    "id": "oolong",
+    "category": "soft",
+    "name": "ウーロン茶",
+    "desc": "休憩用ポーション。",
+    "price": 400,
+    "icon": "🍵",
+    "image": ""
+  },
+  {
+    "id": "cola",
+    "category": "soft",
+    "name": "コーラ",
+    "desc": "弾ける黒の魔水。",
+    "price": 400,
+    "icon": "🥤",
+    "image": ""
+  },
+  {
+    "id": "karaage",
+    "category": "food",
+    "name": "唐揚げ",
+    "desc": "冒険者の基本装備。",
+    "price": 650,
+    "icon": "🍗",
+    "image": ""
+  },
+  {
+    "id": "potato",
+    "category": "food",
+    "name": "ポテト",
+    "desc": "みんなでつまめる定番。",
+    "price": 550,
+    "icon": "🍟",
+    "image": ""
+  },
+  {
+    "id": "curry",
+    "category": "food",
+    "name": "ギルドカレー",
+    "desc": "腹を満たす主食クエスト。",
+    "price": 900,
+    "icon": "🍛",
+    "image": ""
+  },
+  {
+    "id": "dessert",
+    "category": "special",
+    "name": "本日の甘味",
+    "desc": "マスター気まぐれ報酬。",
+    "price": 500,
+    "icon": "🍰",
+    "image": ""
+  }
+]
