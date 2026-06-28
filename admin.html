@@ -5,8 +5,50 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#050505">
 <title>おたく場ギルド 管理 Ver.3</title>
-<link rel="stylesheet" href="main.css">
-<link rel="stylesheet" href="admin.css">
+<style>
+:root{
+  --gold:#f6c84f;--white:#fff6df;--green:#73ff5f;--red:#ff6767;
+  --line:rgba(246,200,79,.72);--panel:rgba(4,8,14,.68);
+  --shadow:0 0 0 2px #1b1203,0 0 0 4px rgba(246,200,79,.72),0 10px 28px rgba(0,0,0,.48);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:var(--white);font-family:"Hiragino Sans","Yu Gothic",Meiryo,monospace}
+button,input,textarea,select{font:inherit}
+button{color:inherit;cursor:pointer;border:0;background:none}
+input,textarea,select{color:var(--white);background:rgba(0,0,0,.62);border:2px solid var(--line);border-radius:8px;padding:10px;outline:none;width:100%}
+.app{position:relative;width:100vw;max-width:480px;height:100dvh;margin:0 auto;overflow:hidden;background:#000;isolation:isolate}
+.bg{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.02),rgba(0,0,0,.12) 50%,rgba(0,0,0,.78) 86%),url("grass.png") center top/cover no-repeat;z-index:-3}
+.scan{position:absolute;inset:0;pointer-events:none;z-index:5;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.025),rgba(255,255,255,.025) 1px,transparent 2px,transparent 5px);opacity:.12}
+.screen{position:absolute;inset:0;display:none;padding:14px 12px calc(14px + env(safe-area-inset-bottom));animation:fadeIn .2s ease both}
+.screen.active{display:flex;flex-direction:column}
+.center{justify-content:center;align-items:center;text-align:center}
+.panel{background:linear-gradient(180deg,rgba(7,12,20,.60),rgba(0,3,8,.72));backdrop-filter:blur(2.5px);-webkit-backdrop-filter:blur(2.5px);border:3px solid rgba(255,246,223,.88);border-radius:12px;box-shadow:var(--shadow);padding:12px;position:relative}
+.window{width:100%;max-width:430px}
+.title-logo{font-size:30px;letter-spacing:1px;color:var(--gold);text-shadow:3px 3px 0 #000,0 0 18px rgba(246,200,79,.7);line-height:1.45}
+.subtitle{margin-top:20px;font-size:18px;text-shadow:2px 2px 0 #000}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.choice{margin-top:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 12px;border:3px solid var(--white);border-radius:9px;background:rgba(0,0,0,.74);box-shadow:inset 0 -4px 0 rgba(255,255,255,.08),0 4px 0 rgba(0,0,0,.45);text-shadow:2px 2px 0 #000}
+.btn:active{transform:translateY(2px)}
+.btn.gold{color:#1d1300;background:linear-gradient(#ffe58a,#c89225);text-shadow:none;border-color:#fff6c8;font-weight:700}
+.btn.green{color:#051b00;background:linear-gradient(#9cff8b,#37b72a);text-shadow:none;border-color:#d9ffd4;font-weight:700}
+.btn.red{background:linear-gradient(#5b1111,#210000);border-color:#ffaaaa;color:#ffd6d6}
+.btn.small{min-height:32px;padding:5px 8px;font-size:12px;border-width:2px}
+.dialog-name{color:var(--gold);margin-bottom:8px}
+.dialog-text{font-size:17px;line-height:1.55}
+.form-grid{display:grid;gap:8px}
+.mt{margin-top:12px}.hidden{display:none!important}.tiny{font-size:12px;opacity:.78;line-height:1.5}
+.toast{position:absolute;left:14px;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;display:none}
+.toast.show{display:block;animation:pop .2s ease both}
+.complete-mark{font-size:54px;color:var(--gold);text-shadow:0 0 20px var(--gold)}
+@keyframes fadeIn{from{opacity:0;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
+@keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@media (min-width:700px){body:before{content:"スマホ縦画面専用アプリです";position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;z-index:99999}.app{display:none}}
+@media (orientation:landscape){body:before{content:"端末を縦にしてください";position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;z-index:99999}.app{display:none}}
+
+
+h1{font-size:22px;color:var(--gold);margin:0 0 8px;text-shadow:2px 2px 0 #000}.admin-tabs{grid-template-columns:repeat(3,1fr);margin:12px 0}.admin-list{display:grid;gap:8px}.admin-item{border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:8px;background:rgba(0,0,0,.45)}.admin-title{color:var(--gold);margin-bottom:4px}.admin-actions{display:flex;gap:6px;margin-top:7px}.admin-actions>*{flex:1}.json-box{width:100%;min-height:48dvh;font-size:12px;line-height:1.4}label{font-size:12px;color:var(--gold)}.field{margin:8px 0}
+</style>
 </head>
 <body>
 <div class="app admin-app">
@@ -25,7 +67,309 @@
   </section>
   <div class="toast" id="toast"><div class="panel" id="toastText"></div></div>
 </div>
-<script src="storage.js"></script>
-<script src="admin.js"></script>
+<script>
+window.GuildStorage = (() => {
+  const keys = {
+    settings:"otakuba.v3.settings",
+    menu:"otakuba.v3.menu",
+    monsters:"otakuba.v3.monsters",
+    state:"otakuba.v3.state",
+    battle:"otakuba.v3.battle"
+  };
+  const DEFAULT_SETTINGS = {
+  "guildName": "おたく場ギルド",
+  "currency": "G",
+  "discordWebhookUrl": "",
+  "battleMode": "continue",
+  "adminPassword": "OTAKU",
+  "categories": [
+    {
+      "id": "all",
+      "name": "全部"
+    },
+    {
+      "id": "drink",
+      "name": "酒場"
+    },
+    {
+      "id": "food",
+      "name": "食事"
+    },
+    {
+      "id": "soft",
+      "name": "回復"
+    },
+    {
+      "id": "special",
+      "name": "限定"
+    }
+  ]
+};
+  const DEFAULT_MENU = [
+  {
+    "id": "beer",
+    "category": "drink",
+    "name": "ビール",
+    "desc": "ギルド定番の一杯。",
+    "price": 700,
+    "icon": "🍺",
+    "image": ""
+  },
+  {
+    "id": "highball",
+    "category": "drink",
+    "name": "ハイボール",
+    "desc": "爽快な一撃。",
+    "price": 650,
+    "icon": "🥃",
+    "image": ""
+  },
+  {
+    "id": "oolong",
+    "category": "soft",
+    "name": "ウーロン茶",
+    "desc": "休憩用ポーション。",
+    "price": 400,
+    "icon": "🍵",
+    "image": ""
+  },
+  {
+    "id": "cola",
+    "category": "soft",
+    "name": "コーラ",
+    "desc": "弾ける黒の魔水。",
+    "price": 400,
+    "icon": "🥤",
+    "image": ""
+  },
+  {
+    "id": "karaage",
+    "category": "food",
+    "name": "唐揚げ",
+    "desc": "冒険者の基本装備。",
+    "price": 650,
+    "icon": "🍗",
+    "image": ""
+  },
+  {
+    "id": "potato",
+    "category": "food",
+    "name": "ポテト",
+    "desc": "みんなでつまめる定番。",
+    "price": 550,
+    "icon": "🍟",
+    "image": ""
+  },
+  {
+    "id": "curry",
+    "category": "food",
+    "name": "ギルドカレー",
+    "desc": "腹を満たす主食クエスト。",
+    "price": 900,
+    "icon": "🍛",
+    "image": ""
+  },
+  {
+    "id": "dessert",
+    "category": "special",
+    "name": "本日の甘味",
+    "desc": "マスター気まぐれ報酬。",
+    "price": 500,
+    "icon": "🍰",
+    "image": ""
+  }
+];
+  const DEFAULT_MONSTERS = [
+  {
+    "id": "slime",
+    "name": "スライム",
+    "hp": 500,
+    "stage": "草原",
+    "background": "grass.png",
+    "image": "slime.png"
+  },
+  {
+    "id": "goblin_1",
+    "name": "ゴブリン 1/3",
+    "hp": 500,
+    "stage": "森",
+    "background": "forest.png",
+    "image": "goblin.png"
+  },
+  {
+    "id": "goblin_2",
+    "name": "ゴブリン 2/3",
+    "hp": 500,
+    "stage": "森",
+    "background": "forest.png",
+    "image": "goblin.png"
+  },
+  {
+    "id": "goblin_3",
+    "name": "ゴブリン 3/3",
+    "hp": 500,
+    "stage": "森",
+    "background": "forest.png",
+    "image": "goblin.png"
+  },
+  {
+    "id": "orc_1",
+    "name": "オーク 1/2",
+    "hp": 2500,
+    "stage": "山",
+    "background": "mountain.png",
+    "image": "orc.png"
+  },
+  {
+    "id": "orc_2",
+    "name": "オーク 2/2",
+    "hp": 2500,
+    "stage": "山",
+    "background": "mountain.png",
+    "image": "orc.png"
+  },
+  {
+    "id": "skeleton_1",
+    "name": "スケルトン 1/2",
+    "hp": 1000,
+    "stage": "洞窟",
+    "background": "cave.png",
+    "image": "skeleton.png"
+  },
+  {
+    "id": "skeleton_2",
+    "name": "スケルトン 2/2",
+    "hp": 1000,
+    "stage": "洞窟",
+    "background": "cave.png",
+    "image": "skeleton.png"
+  },
+  {
+    "id": "mimic_1",
+    "name": "ミミック 1/2",
+    "hp": 2500,
+    "stage": "洞窟",
+    "background": "cave.png",
+    "image": "mimic.png"
+  },
+  {
+    "id": "mimic_2",
+    "name": "ミミック 2/2",
+    "hp": 2500,
+    "stage": "洞窟",
+    "background": "cave.png",
+    "image": "mimic.png"
+  },
+  {
+    "id": "gargoyle",
+    "name": "ガーゴイル",
+    "hp": 5000,
+    "stage": "遺跡",
+    "background": "ruins.png",
+    "image": "gargoyle.png"
+  },
+  {
+    "id": "dark_wizard",
+    "name": "ダークウィザード",
+    "hp": 10000,
+    "stage": "遺跡",
+    "background": "ruins.png",
+    "image": "dark_wizard.png"
+  },
+  {
+    "id": "minotaur",
+    "name": "ミノタウロス",
+    "hp": 10000,
+    "stage": "火山",
+    "background": "volcano.png",
+    "image": "minotaur.png"
+  },
+  {
+    "id": "dragon",
+    "name": "ドラゴン",
+    "hp": 15000,
+    "stage": "王城前",
+    "background": "castle.png",
+    "image": "dragon.png"
+  },
+  {
+    "id": "maou",
+    "name": "魔王",
+    "hp": 20000,
+    "stage": "魔王城 玉座",
+    "background": "castle.png",
+    "image": "maou.png"
+  }
+];
+  function clone(v){ return JSON.parse(JSON.stringify(v)); }
+  function get(key, fallback){
+    try{ 
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function set(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+  async function init(){
+    const settings = get(keys.settings, clone(DEFAULT_SETTINGS));
+    const menu = get(keys.menu, clone(DEFAULT_MENU));
+    const monsters = get(keys.monsters, clone(DEFAULT_MONSTERS));
+    set(keys.settings, settings); set(keys.menu, menu); set(keys.monsters, monsters);
+    return {settings, menu, monsters};
+  }
+  return {keys, get, set, init};
+})();
+
+const $ = id => document.getElementById(id);
+let currentTab = "menu";
+
+function toast(msg){
+  $("toastText").textContent = msg;
+  $("toast").classList.add("show");
+  setTimeout(()=>$("toast").classList.remove("show"),1500);
+}
+function getData(){
+  return {
+    settings: GuildStorage.get(GuildStorage.keys.settings, {}),
+    menu: GuildStorage.get(GuildStorage.keys.menu, []),
+    monsters: GuildStorage.get(GuildStorage.keys.monsters, [])
+  };
+}
+function saveJson(key, value){
+  try{
+    GuildStorage.set(key, JSON.parse(value));
+    toast("保存しました");
+    render();
+  }catch(e){ toast("JSONエラー"); }
+}
+function render(){
+  const d = getData();
+  const c = $("adminContent");
+  if(currentTab === "menu"){
+    c.innerHTML = `<div class="admin-item"><div class="admin-title">menu.json</div><textarea class="json-box" id="jsonEdit">${JSON.stringify(d.menu,null,2)}</textarea><button class="btn gold mt" id="saveJson">保存</button></div>`;
+    $("saveJson").onclick = () => saveJson(GuildStorage.keys.menu, $("jsonEdit").value);
+  }
+  if(currentTab === "battle"){
+    c.innerHTML = `<div class="admin-item"><div class="admin-title">monsters.json</div><textarea class="json-box" id="jsonEdit">${JSON.stringify(d.monsters,null,2)}</textarea><button class="btn gold mt" id="saveJson">保存</button></div>`;
+    $("saveJson").onclick = () => saveJson(GuildStorage.keys.monsters, $("jsonEdit").value);
+  }
+  if(currentTab === "settings"){
+    c.innerHTML = `<div class="admin-item"><div class="admin-title">settings.json</div><textarea class="json-box" id="jsonEdit">${JSON.stringify(d.settings,null,2)}</textarea><button class="btn gold mt" id="saveJson">保存</button></div>`;
+    $("saveJson").onclick = () => saveJson(GuildStorage.keys.settings, $("jsonEdit").value);
+  }
+}
+document.addEventListener("DOMContentLoaded", async () => {
+  await GuildStorage.init();
+  document.querySelectorAll("[data-admin-tab]").forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      currentTab = b.dataset.adminTab;
+      render();
+    };
+  });
+  render();
+});
+
+</script>
 </body>
 </html>
