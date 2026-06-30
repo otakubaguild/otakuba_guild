@@ -1,4 +1,4 @@
-window.GuildApp = {VERSION:'3.0-final-overwrite'};
+window.GuildApp = {VERSION:'実働版 v3.1'};
 (async function(){
   const {$}=GuildUtils; const data=await GuildStorage.init();
   GuildAudio.init(data.settings); GuildBattle.init(data); GuildMenu.init(data);

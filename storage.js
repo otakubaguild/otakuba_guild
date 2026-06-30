@@ -78,12 +78,49 @@ window.GuildStorage = (() => {
     data.activeBill = Array.isArray(data.activeBill)?data.activeBill:[];
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
-    save();
+    set(keys.state,data);
+    await pullCloud();   // GASに正データがあれば取り込む
+    set(keys.state,data);
     return data;
   }
-  function save(){ set(keys.state,data); }
+  // --- クラウド同期（GAS）---
+  let pushTimer=null;
+  function gasUrl(){ return (data.settings && (data.settings.gasUrl||'').trim()) || ''; }
+  // 共有すべき管理データだけを送る（戦闘の一時状態は端末ローカルのまま）
+  function sharedPayload(){
+    return {action:'saveAll', settings:data.settings, menu:data.menu, monsters:data.monsters, customers:data.customers, sales:data.sales};
+  }
+  function pushCloud(){
+    const url=gasUrl(); if(!url) return;
+    try{ fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(sharedPayload())}); }catch(e){}
+  }
+  // 保存が連続しても1.2秒に1回だけ送る（GASの負荷・遅延対策）
+  function schedulePush(){ if(!gasUrl())return; clearTimeout(pushTimer); pushTimer=setTimeout(pushCloud,1200); }
+  // 起動時：クラウドの管理データで上書き（端末固有の進行状態は維持）
+  async function pullCloud(){
+    const url=gasUrl(); if(!url) return false;
+    try{
+      const res=await fetch(url+(url.includes('?')?'&':'?')+'action=sync&v='+Date.now(),{cache:'no-store'});
+      const remote=await res.json(); if(!remote||typeof remote!=='object') return false;
+      if(remote.settings && Object.keys(remote.settings).length){ data.settings=Object.assign({},data.settings,remote.settings); }
+      if(Array.isArray(remote.menu)&&remote.menu.length){ data.menu=remote.menu.map(normalizeMenu); }
+      if(Array.isArray(remote.monsters)&&remote.monsters.length){
+        const idx=data.currentEnemyIndex, curHp=(data.monsters[idx]||{}).hp;
+        data.monsters=remote.monsters.map(normalizeMonster);
+        // 戦闘中の現在HPは端末側を尊重（メニュー定義だけ同期したい場合の保険）
+        if(typeof curHp==='number' && data.monsters[idx]) data.monsters[idx].hp=curHp;
+      }
+      if(Array.isArray(remote.customers)){ data.customers=remote.customers; }
+      if(Array.isArray(remote.sales)){ data.sales=remote.sales; }
+      data.currentEnemyIndex=GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
+      set(keys.state,data);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function save(){ set(keys.state,data); schedulePush(); }
   function resetProgress(){ data.currentEnemyIndex=0; data.monsters.forEach(m=>m.hp=m.maxHp); data.activeBill=[]; save(); }
   function getData(){ return data; }
   function replace(part, value){ data[part]=value; save(); }
-  return {keys, init, save, getData, replace, resetProgress};
+  return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud};
 })();
