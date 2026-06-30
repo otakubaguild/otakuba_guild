@@ -57,5 +57,11 @@
       "victory": "victory.mp3",
       "levelup": "levelup.mp3"
     }
+  },
+  "notice": {
+    "enabled": true,
+    "title": "本日のお知らせ",
+    "body": "",
+    "position": "top"
   }
 }

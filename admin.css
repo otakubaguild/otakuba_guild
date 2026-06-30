@@ -29,3 +29,10 @@ html,body{overflow:auto;min-height:100%;height:auto}
 .wide-label{grid-column:1/-1}.billbox{margin-top:8px;padding:10px;border:1px solid rgba(246,200,79,.45);border-radius:10px;background:rgba(0,0,0,.35)}
 .empty{padding:16px;text-align:center;opacity:.75;line-height:1.7}
 @media(max-width:720px){.admin-tabs{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.admin-head{flex-wrap:wrap}.admin-head h1{flex-basis:100%}.customer-mini-grid,.monster-mini-grid{grid-template-columns:1fr}}
+.notice-admin textarea{min-height:100px}
+.big-num{font-size:24px;font-weight:900;color:var(--gold);text-shadow:2px 2px #000;margin:6px 0}
+.sales-summary{margin:10px 0}
+.sales-table{width:100%;border-collapse:collapse;font-size:13px}
+.sales-table th,.sales-table td{border-bottom:1px solid rgba(246,200,79,.28);padding:7px 4px;text-align:left}
+.sales-table th{color:var(--gold)}
+.sales-table td:nth-child(2),.sales-table td:nth-child(3){text-align:right}

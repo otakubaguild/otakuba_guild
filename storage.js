@@ -5,7 +5,7 @@ window.GuildStorage = (() => {
     legacy:'otakubaGuildApp.v1.complete'
   };
   const files = {settings:'settings.json', menu:'menu.json', monsters:'monsters.json', customers:'customers.json', sales:'sales.json'};
-  let data = {settings:{}, menu:[], monsters:[], customers:[], sales:[], currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1};
+  let data = {settings:{}, menu:[], monsters:[], customers:[], sales:[], deletedSaleIds:[], salesSettings:{currentMonth:'', closedMonths:[]}, currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1};
 
   async function fetchJson(path, fallback){
     try{ const res = await fetch(`${path}?v=${Date.now()}`, {cache:'no-store'}); if(!res.ok) throw new Error(path); return await res.json(); }
@@ -38,6 +38,8 @@ window.GuildStorage = (() => {
       monsters:legacy.settings && Array.isArray(legacy.settings.enemies)?legacy.settings.enemies.map(normalizeMonster):data.monsters,
       customers:Array.isArray(legacy.customers)?legacy.customers:data.customers,
       sales:Array.isArray(legacy.sales)?legacy.sales:data.sales,
+      deletedSaleIds:Array.isArray(legacy.deletedSaleIds)?legacy.deletedSaleIds:[],
+      salesSettings:legacy.salesSettings||data.salesSettings||{currentMonth:'',closedMonths:[]},
       currentCustomer:legacy.currentCustomer || legacy.name || '',
       activeBill:Array.isArray(legacy.activeBill)?legacy.activeBill:[],
       currentEnemyIndex:Number(legacy.settings && legacy.settings.currentEnemyIndex)||0,
@@ -52,6 +54,8 @@ window.GuildStorage = (() => {
       monsters: await fetchJson(files.monsters, []),
       customers: await fetchJson(files.customers, []),
       sales: await fetchJson(files.sales, []),
+      deletedSaleIds:[],
+      salesSettings:{currentMonth:'', closedMonths:[]},
       currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1
     };
     defaults.settings = Object.assign({
@@ -64,8 +68,10 @@ window.GuildStorage = (() => {
         bgm:{title:'冒険への誘い.mp3',slime:'maou_bgm_fantasy15.mp3',goblin:'Baring_Their_Fangs.mp3',orc:'反撃の一矢.mp3',cave:'Rumbling.mp3',ruins:'龍太鼓.mp3',maou:'Extinguish.mp3',ending:'March_for__delightful_future.mp3'},
         se:{ok:'maou_se_system37.mp3',cancel:'maou_se_system49.mp3',bad:'maou_se_system49.mp3',add:'maou_se_onepoint16.mp3',confirm:'maou_se_system37.mp3',damage:'maou_se_onepoint20.mp3',defeat:'maou_se_system49.mp3',victory:'RPG風ファンファーレ.mp3',levelup:'レベルアップ.mp3'}
       },
-      bgmVolume:0.45,seVolume:0.9
+      bgmVolume:0.45,seVolume:0.9,
+      notice:{enabled:true,title:'本日のお知らせ',body:'',position:'top'}
     }, defaults.settings || {});
+    data.settings.notice = Object.assign({enabled:true,title:'本日のお知らせ',body:'',position:'top'}, data.settings.notice || {});
 
     const existing = get(keys.state, null);
     const old = !existing ? get(keys.old, null) : null;
@@ -76,6 +82,12 @@ window.GuildStorage = (() => {
     data.monsters = (Array.isArray(data.monsters)&&data.monsters.length?data.monsters:defaults.monsters).map(normalizeMonster);
     data.customers = Array.isArray(data.customers)?data.customers:[];
     data.sales = Array.isArray(data.sales)?data.sales:[];
+    data.deletedSaleIds = Array.isArray(data.deletedSaleIds)?data.deletedSaleIds:[];
+    data.sales = data.sales.filter(s=>!data.deletedSaleIds.includes(saleKey(s)));
+    data.salesSettings = data.salesSettings && typeof data.salesSettings==='object' ? data.salesSettings : {currentMonth:'', closedMonths:[]};
+    if(!Array.isArray(data.salesSettings.closedMonths)) data.salesSettings.closedMonths=[];
+    if(!data.salesSettings.currentMonth) data.salesSettings.currentMonth = new Date().toISOString().slice(0,7);
+    data.sales.forEach(s=>{ if(s && s.type==='checkout' && !s.accountingMonth) s.accountingMonth = String(s.time||new Date().toISOString()).slice(0,7); });
     data.activeBill = Array.isArray(data.activeBill)?data.activeBill:[];
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
@@ -88,8 +100,9 @@ window.GuildStorage = (() => {
   let pushTimer=null;
   function gasUrl(){ return (data.settings && (data.settings.gasUrl||'').trim()) || ''; }
   // 共有すべき管理データだけを送る（戦闘の一時状態は端末ローカルのまま）
+  function saleKey(s){ return s && (s.id || s.saleId || (String(s.time||'')+'|'+String(s.customer||'')+'|'+String(s.total||'')+'|'+JSON.stringify(s.items||[]))); }
   function sharedPayload(){
-    return {action:'saveAll', settings:data.settings, menu:data.menu, monsters:data.monsters, customers:data.customers, sales:data.sales};
+    return {action:'saveAll', settings:data.settings, menu:data.menu, monsters:data.monsters, customers:data.customers, sales:data.sales, deletedSaleIds:data.deletedSaleIds||[], salesSettings:data.salesSettings};
   }
   function pushCloud(){
     const url=gasUrl(); if(!url) return;
@@ -117,10 +130,16 @@ window.GuildStorage = (() => {
         remote.customers.forEach(rc=>{ if(!rc||!rc.id){ return; } const local=byId[rc.id]; if(!local){ byId[rc.id]=rc; } else { const lv=(Number(local.visits)||0), rv=(Number(rc.visits)||0); byId[rc.id]=(rv>=lv)?rc:local; } });
         data.customers=Object.keys(byId).map(k=>byId[k]);
       }
+      if(remote.salesSettings && typeof remote.salesSettings==='object'){ data.salesSettings=Object.assign({},data.salesSettings||{},remote.salesSettings); if(!Array.isArray(data.salesSettings.closedMonths))data.salesSettings.closedMonths=[]; if(!data.salesSettings.currentMonth)data.salesSettings.currentMonth=new Date().toISOString().slice(0,7); }
+      if(Array.isArray(remote.deletedSaleIds)){
+        const delSet=new Set([...(data.deletedSaleIds||[]), ...remote.deletedSaleIds]);
+        data.deletedSaleIds=Array.from(delSet);
+      }
       if(Array.isArray(remote.sales)){
-        // 売上IDで重複を除いて統合（消さずに足す）
+        // 売上IDで重複を除いて統合。ただし削除済みIDはGASから戻ってきても復活させない
+        const deleted=new Set(data.deletedSaleIds||[]);
         const seen={}; const merged=[];
-        (data.sales||[]).concat(remote.sales).forEach(s=>{ if(!s) return; const id=s.id||JSON.stringify(s); if(!seen[id]){ seen[id]=1; merged.push(s); } });
+        (data.sales||[]).concat(remote.sales).forEach(s=>{ if(!s) return; const id=saleKey(s); if(deleted.has(id)) return; if(!seen[id]){ seen[id]=1; merged.push(s); } });
         data.sales=merged;
       }
       data.currentEnemyIndex=GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
@@ -133,5 +152,6 @@ window.GuildStorage = (() => {
   function resetProgress(){ data.currentEnemyIndex=0; data.monsters.forEach(m=>m.hp=m.maxHp); data.activeBill=[]; save(); }
   function getData(){ return data; }
   function replace(part, value){ data[part]=value; save(); }
-  return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud};
+  function markSaleDeleted(s){ const id=saleKey(s); if(!id)return; data.deletedSaleIds=data.deletedSaleIds||[]; if(!data.deletedSaleIds.includes(id)) data.deletedSaleIds.push(id); }
+  return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud, markSaleDeleted};
 })();

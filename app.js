@@ -1,7 +1,7 @@
 window.GuildApp = {VERSION:'実働版 v3.1'};
 (async function(){
   const {$}=GuildUtils; const data=await GuildStorage.init();
-  GuildAudio.init(data.settings); GuildBattle.init(data); GuildMenu.init(data);
+  GuildAudio.init(data.settings); GuildBattle.init(data); GuildMenu.init(data); GuildUI.renderNotice(data.settings);
   if($('appVersion')) $('appVersion').textContent=GuildApp.VERSION; if(data.currentCustomer) $('nameInput').value=data.currentCustomer;
   function welcomeText(text){ const sub=document.querySelector('#screenWelcome .subtitle'); if(sub) sub.textContent=text||'メニューを開きますか？'; }
   function showMasterMessage(text){ let box=$('masterMessageBox'); if(!box){ const panel=document.querySelector('#screenWelcome .panel.window'); box=document.createElement('div'); box.id='masterMessageBox'; box.className='panel master-box'; box.innerHTML=`<div class="master-grid"><div class="master-face"><img src="master.png" alt="ギルドマスター" onerror="this.replaceWith(document.createTextNode('🧙'))"></div><div><div class="master-name">ギルドマスター</div><div id="masterMessageText">冷やかしか？さっさとメニューを開け</div></div></div>`; panel.appendChild(box); } $('masterMessageText').textContent=text||'冷やかしか？さっさとメニューを開け'; box.style.display='block'; }
@@ -29,7 +29,7 @@ window.GuildApp = {VERSION:'実働版 v3.1'};
   $('btnPartyOk').onclick=()=>{ GuildAudio.playSe('ok'); showChargeConfirm(); };
   $('btnCancelCharge').onclick=()=>GuildUI.closeModals();
   $('btnNoCharge').onclick=()=>{ GuildAudio.playSe('cancel'); GuildUI.closeModals(); GuildUI.show('screenWelcome'); };
-  $('btnDoCharge').onclick=()=>{ GuildAudio.playSe('ok'); applyCoverCharge(); GuildUI.closeModals(); GuildUI.show('screenMain'); GuildBattle.render(); };
+  $('btnDoCharge').onclick=()=>{ GuildAudio.playSe('ok'); applyCoverCharge(); GuildUI.closeModals(); GuildUI.renderNotice(data.settings); GuildUI.show('screenMain'); GuildBattle.render(); };
   $('btnBackTitle').onclick=()=>{ GuildAudio.playSe('cancel'); GuildUI.closeModals(); welcomeText('メニューを開きますか？'); GuildUI.show('screenWelcome'); GuildAudio.playBgm('title'); };
   $('btnCloseMenu').onclick=()=>GuildUI.closeModals(); $('btnCancelOrder').onclick=GuildOrder.cancelPending; $('btnNoOrder').onclick=GuildOrder.cancelPending; $('btnDoOrder').onclick=GuildOrder.confirmOrder; $('btnCheckout').onclick=GuildOrder.checkoutAsk; $('btnCancelCheckout').onclick=()=>GuildUI.closeModals(); $('btnNoCheckout').onclick=()=>GuildUI.closeModals(); $('btnDoCheckout').onclick=GuildOrder.checkoutDo;
   GuildUI.show('screenWelcome'); GuildAudio.playBgm('title');
