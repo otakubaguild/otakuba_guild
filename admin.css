@@ -36,3 +36,4 @@ html,body{overflow:auto;min-height:100%;height:auto}
 .sales-table th,.sales-table td{border-bottom:1px solid rgba(246,200,79,.28);padding:7px 4px;text-align:left}
 .sales-table th{color:var(--gold)}
 .sales-table td:nth-child(2),.sales-table td:nth-child(3){text-align:right}
+.sales-table input[type="number"]{width:90px}.sales-table label{display:inline-flex;align-items:center;gap:4px;margin:0}.big-num{font-size:24px;font-weight:900;color:var(--gold);margin:8px 0}.sales-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sales-summary>div{padding:8px;border:1px solid rgba(246,200,79,.35);border-radius:8px;background:rgba(0,0,0,.25)}

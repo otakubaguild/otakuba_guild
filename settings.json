@@ -8,29 +8,29 @@
   "discordWebhookUrl": "",
   "categories": [
     {
-      "id": "alcohol",
-      "name": "酒",
+      "id": "beer_sour",
+      "name": "ビール・サワー",
       "icon": "🍺"
     },
     {
-      "id": "drink",
-      "name": "ドリンク",
+      "id": "shochu_cocktail",
+      "name": "焼酎・カクテル",
+      "icon": "🍸"
+    },
+    {
+      "id": "shot_bottle",
+      "name": "ショット・ボトル",
+      "icon": "🥂"
+    },
+    {
+      "id": "soft",
+      "name": "ソフトドリンク",
       "icon": "🥤"
     },
     {
       "id": "food",
       "name": "フード",
-      "icon": "🍖"
-    },
-    {
-      "id": "dessert",
-      "name": "デザート",
-      "icon": "🍰"
-    },
-    {
-      "id": "event",
-      "name": "イベント",
-      "icon": "🎉"
+      "icon": "🍟"
     }
   ],
   "bgmVolume": 0.45,

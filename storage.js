@@ -5,7 +5,7 @@ window.GuildStorage = (() => {
     legacy:'otakubaGuildApp.v1.complete'
   };
   const files = {settings:'settings.json', menu:'menu.json', monsters:'monsters.json', customers:'customers.json', sales:'sales.json'};
-  let data = {settings:{}, menu:[], monsters:[], customers:[], sales:[], deletedSaleIds:[], salesSettings:{currentMonth:'', closedMonths:[]}, currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1};
+  let data = {settings:{}, menu:[], monsters:[], customers:[], sales:[], deletedSaleIds:[], salesSettings:{currentMonth:'', closedMonths:[], monthlyArchives:{}}, currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1};
 
   async function fetchJson(path, fallback){
     try{ const res = await fetch(`${path}?v=${Date.now()}`, {cache:'no-store'}); if(!res.ok) throw new Error(path); return await res.json(); }
@@ -25,9 +25,12 @@ window.GuildStorage = (() => {
 
   function normalizeMenu(p,i){
     p=p||{};
+    const stockRaw = p.stock === '' || p.stock === null || typeof p.stock === 'undefined' ? '' : Number(p.stock);
+    const stock = stockRaw === '' || !Number.isFinite(stockRaw) ? '' : Math.max(0, stockRaw);
     return {id:p.id||GuildUtils.uid('menu'), cat:p.cat||p.category||'food', category:p.cat||p.category||'food',
       name:p.name||'商品', price:Number(p.price)||0, emoji:p.emoji||p.icon||'🍽️', icon:p.emoji||p.icon||'🍽️',
-      image:p.image||'', desc:p.desc||'', hidden:!!p.hidden, sort:Number(p.sort||i)};
+      image:p.image||'', desc:p.desc||'', hidden:!!p.hidden, sort:Number(p.sort||i),
+      soldOut:!!p.soldOut, recommended:!!p.recommended, limited:!!p.limited, stock:stock};
   }
 
   function migrateLegacy(legacy){
@@ -39,7 +42,7 @@ window.GuildStorage = (() => {
       customers:Array.isArray(legacy.customers)?legacy.customers:data.customers,
       sales:Array.isArray(legacy.sales)?legacy.sales:data.sales,
       deletedSaleIds:Array.isArray(legacy.deletedSaleIds)?legacy.deletedSaleIds:[],
-      salesSettings:legacy.salesSettings||data.salesSettings||{currentMonth:'',closedMonths:[]},
+      salesSettings:legacy.salesSettings||data.salesSettings||{currentMonth:'',closedMonths:[],monthlyArchives:{}},
       currentCustomer:legacy.currentCustomer || legacy.name || '',
       activeBill:Array.isArray(legacy.activeBill)?legacy.activeBill:[],
       currentEnemyIndex:Number(legacy.settings && legacy.settings.currentEnemyIndex)||0,
@@ -55,23 +58,27 @@ window.GuildStorage = (() => {
       customers: await fetchJson(files.customers, []),
       sales: await fetchJson(files.sales, []),
       deletedSaleIds:[],
-      salesSettings:{currentMonth:'', closedMonths:[]},
+      salesSettings:{currentMonth:'', closedMonths:[], monthlyArchives:{}},
       currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1
     };
     defaults.settings = Object.assign({
       currency:'G', coverCharge:500, levelStep:3000, adminPassword:'OTAKU', notifyOn:true, gasUrl:'', discordWebhookUrl:'',
       categories:[
-        {id:'alcohol', name:'酒', icon:'🍺'}, {id:'drink', name:'ドリンク', icon:'🥤'},
-        {id:'food', name:'フード', icon:'🍖'}, {id:'dessert', name:'デザート', icon:'🍰'}, {id:'event', name:'イベント', icon:'🎉'}
+        {id:'beer_sour', name:'ビール・サワー', icon:'🍺'}, {id:'shochu_cocktail', name:'焼酎・カクテル', icon:'🍸'},
+        {id:'shot_bottle', name:'ショット・ボトル', icon:'🥂'}, {id:'soft', name:'ソフトドリンク', icon:'🥤'},
+        {id:'food', name:'フード', icon:'🍟'}
       ],
       audioFiles:{
         bgm:{title:'冒険への誘い.mp3',slime:'maou_bgm_fantasy15.mp3',goblin:'Baring_Their_Fangs.mp3',orc:'反撃の一矢.mp3',cave:'Rumbling.mp3',ruins:'龍太鼓.mp3',maou:'Extinguish.mp3',ending:'March_for__delightful_future.mp3'},
         se:{ok:'maou_se_system37.mp3',cancel:'maou_se_system49.mp3',bad:'maou_se_system49.mp3',add:'maou_se_onepoint16.mp3',confirm:'maou_se_system37.mp3',damage:'maou_se_onepoint20.mp3',defeat:'maou_se_system49.mp3',victory:'RPG風ファンファーレ.mp3',levelup:'レベルアップ.mp3'}
       },
       bgmVolume:0.45,seVolume:0.9,
-      notice:{enabled:true,title:'本日のお知らせ',body:'',position:'top'}
+      notice:{enabled:true,title:'本日のお知らせ',body:'',position:'top'},
+      business:{open:false,openedAt:'',closedAt:'',dailyReports:[]}
     }, defaults.settings || {});
     data.settings.notice = Object.assign({enabled:true,title:'本日のお知らせ',body:'',position:'top'}, data.settings.notice || {});
+    data.settings.business = Object.assign({open:false,openedAt:'',closedAt:'',dailyReports:[]}, data.settings.business || {});
+    if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
 
     const existing = get(keys.state, null);
     const old = !existing ? get(keys.old, null) : null;
@@ -84,11 +91,14 @@ window.GuildStorage = (() => {
     data.sales = Array.isArray(data.sales)?data.sales:[];
     data.deletedSaleIds = Array.isArray(data.deletedSaleIds)?data.deletedSaleIds:[];
     data.sales = data.sales.filter(s=>!data.deletedSaleIds.includes(saleKey(s)));
-    data.salesSettings = data.salesSettings && typeof data.salesSettings==='object' ? data.salesSettings : {currentMonth:'', closedMonths:[]};
+    data.salesSettings = data.salesSettings && typeof data.salesSettings==='object' ? data.salesSettings : {currentMonth:'', closedMonths:[], monthlyArchives:{}};
     if(!Array.isArray(data.salesSettings.closedMonths)) data.salesSettings.closedMonths=[];
+    if(!data.salesSettings.monthlyArchives || typeof data.salesSettings.monthlyArchives!=='object') data.salesSettings.monthlyArchives={};
     if(!data.salesSettings.currentMonth) data.salesSettings.currentMonth = new Date().toISOString().slice(0,7);
     data.sales.forEach(s=>{ if(s && s.type==='checkout' && !s.accountingMonth) s.accountingMonth = String(s.time||new Date().toISOString()).slice(0,7); });
     data.activeBill = Array.isArray(data.activeBill)?data.activeBill:[];
+    data.settings.business = Object.assign({open:false,openedAt:'',closedAt:'',dailyReports:[]}, data.settings.business || {});
+    if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
     set(keys.state,data);
@@ -130,7 +140,7 @@ window.GuildStorage = (() => {
         remote.customers.forEach(rc=>{ if(!rc||!rc.id){ return; } const local=byId[rc.id]; if(!local){ byId[rc.id]=rc; } else { const lv=(Number(local.visits)||0), rv=(Number(rc.visits)||0); byId[rc.id]=(rv>=lv)?rc:local; } });
         data.customers=Object.keys(byId).map(k=>byId[k]);
       }
-      if(remote.salesSettings && typeof remote.salesSettings==='object'){ data.salesSettings=Object.assign({},data.salesSettings||{},remote.salesSettings); if(!Array.isArray(data.salesSettings.closedMonths))data.salesSettings.closedMonths=[]; if(!data.salesSettings.currentMonth)data.salesSettings.currentMonth=new Date().toISOString().slice(0,7); }
+      if(remote.salesSettings && typeof remote.salesSettings==='object'){ data.salesSettings=Object.assign({},data.salesSettings||{},remote.salesSettings); if(!Array.isArray(data.salesSettings.closedMonths))data.salesSettings.closedMonths=[]; if(!data.salesSettings.monthlyArchives||typeof data.salesSettings.monthlyArchives!=='object')data.salesSettings.monthlyArchives={}; if(!data.salesSettings.currentMonth)data.salesSettings.currentMonth=new Date().toISOString().slice(0,7); }
       if(Array.isArray(remote.deletedSaleIds)){
         const delSet=new Set([...(data.deletedSaleIds||[]), ...remote.deletedSaleIds]);
         data.deletedSaleIds=Array.from(delSet);
