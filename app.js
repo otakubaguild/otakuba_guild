@@ -1,7 +1,8 @@
-window.GuildApp = {VERSION:'4.0.4'};
+window.GuildApp = {VERSION:'4.0'};
 (async function(){
   const {$}=GuildUtils; const data=await GuildStorage.init();
   GuildAudio.init(data.settings); GuildBattle.init(data); GuildMenu.init(data); GuildUI.renderNotice(data.settings);
+  GuildApp.onSynced=function(){ try{ GuildMenu.init(data); GuildUI.renderNotice(data.settings); GuildBattle.render(); if(typeof renderParty==='function') renderParty(); }catch(e){} };
   if(data.currentCustomer) $('nameInput').value=data.currentCustomer;
   function welcomeText(text){ const sub=document.querySelector('#screenWelcome .subtitle'); if(sub) sub.textContent=text||'メニューを開きますか？'; }
   function showMasterMessage(text){ let box=$('masterMessageBox'); if(!box){ const panel=document.querySelector('#screenWelcome .panel.window'); box=document.createElement('div'); box.id='masterMessageBox'; box.className='panel master-box'; box.innerHTML=`<div class="master-grid"><div class="master-face"><img src="master.png" alt="ギルドマスター" onerror="this.replaceWith(document.createTextNode('🧙'))"></div><div><div class="master-name">ギルドマスター</div><div id="masterMessageText">冷やかしか？さっさとメニューを開け</div></div></div>`; panel.appendChild(box); } $('masterMessageText').textContent=text||'冷やかしか？さっさとメニューを開け'; box.style.display='block'; }
