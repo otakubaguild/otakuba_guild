@@ -2,47 +2,28 @@
   "guildName": "おたく場ギルド",
   "currency": "G",
   "discordWebhookUrl": "",
-  "gasUrl": "",
-  "notifyOn": true,
   "battleMode": "continue",
   "adminPassword": "OTAKU",
-  "levelStep": 3000,
-  "notice": {
-    "enabled": false,
-    "title": "本日のお知らせ",
-    "body": "",
-    "position": "top"
-  },
   "categories": [
     {
       "id": "all",
-      "name": "全部",
-      "icon": "📜"
+      "name": "全部"
     },
     {
       "id": "drink",
-      "name": "ドリンク",
-      "icon": "🥤"
-    },
-    {
-      "id": "alcohol",
-      "name": "酒",
-      "icon": "🍺"
+      "name": "酒場"
     },
     {
       "id": "food",
-      "name": "フード",
-      "icon": "🍖"
+      "name": "食事"
     },
     {
-      "id": "dessert",
-      "name": "デザート",
-      "icon": "🍰"
+      "id": "soft",
+      "name": "回復"
     },
     {
-      "id": "event",
-      "name": "イベント",
-      "icon": "🎉"
+      "id": "special",
+      "name": "限定"
     }
   ],
   "bgmVolume": 0.45,
@@ -66,9 +47,11 @@
       "confirm": "ok.mp3",
       "damage": "damage.mp3",
       "hit": "damage.mp3",
-      "defeat": "cancel.mp3",
+      "defeat": "defeat.mp3",
       "levelup": "levelup.mp3",
       "victory": "victory.mp3"
     }
-  }
+  },
+  "notifyOn": true,
+  "levelStep": 3000
 }
