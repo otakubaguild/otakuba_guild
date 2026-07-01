@@ -127,7 +127,13 @@ window.GuildStorage = (() => {
     try{
       const res=await fetch(url+(url.includes('?')?'&':'?')+'action=sync&v='+Date.now(),{cache:'no-store'});
       const remote=await res.json(); if(!remote||typeof remote!=='object') return false;
-      if(remote.settings && Object.keys(remote.settings).length){ data.settings=Object.assign({},data.settings,remote.settings); }
+      if(remote.settings && Object.keys(remote.settings).length){
+        const keepCategories = data.settings.categories;
+        data.settings = Object.assign({}, data.settings, remote.settings);
+        if(Array.isArray(keepCategories) && keepCategories.length){
+          data.settings.categories = keepCategories;
+        }
+      }
       // メニューは「管理画面で保存した正データ」がGASにある時だけ採用。
       // remote.settings.menuPushedAt が無い＝昔の残骸とみなし、ローカルのmenu.jsonを優先（本番を壊さない）
       if(Array.isArray(remote.menu)&&remote.menu.length && remote.settings && remote.settings.menuPushedAt){
