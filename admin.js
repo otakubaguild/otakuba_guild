@@ -171,6 +171,7 @@
     '<label>敵名<input data-field="name" value="'+esc(m.name)+'"></label>'+
     '<label>ステージ<input data-field="stage" value="'+esc(m.stage)+'"></label>'+
     '<label>BGM（一覧から選択）<select data-field="bgm">'+bgmOptList(BGM_LIST.concat(BGM_LIST.includes(m.bgm)||!m.bgm?[]:[m.bgm]),m.bgm)+'</select></label>'+
+    '<div class="toolbar"><button class="btn small" data-bgm-play="'+i+'">▶ このBGMを試聴</button><button class="btn small" data-bgm-stop="'+i+'">■ 停止</button></div>'+
     '<label>BGM URL（アップした音源を使う場合はここに貼る）<input data-field="bgmUrl" value="'+esc(/^https?:/i.test(m.bgm)?m.bgm:'')+'" placeholder="https://drive.google.com/..."></label>'+
     '<label>現在HP<input data-field="hp" type="number" value="'+(m.hp||0)+'"></label>'+
     '<label>最大HP<input data-field="maxHp" type="number" value="'+(m.maxHp||500)+'"></label>'+
@@ -193,6 +194,24 @@
     $('jsonMonsters').onclick=function(){textareaEditor('monsters','monsters.json');};}
   function updatePreview(card){var img=card.querySelector('[data-preview-img]');var box=card.querySelector('[data-preview]');if(!img||!box)return;var sc=(+card.querySelector('[data-field=scale]').value||100)/100;var ox=+card.querySelector('[data-field=offsetX]').value||0;var oy=+card.querySelector('[data-field=offsetY]').value||0;var imgSrc=card.querySelector('[data-field=image]').value;var imgUrlField=(card.querySelector('[data-field=imageUrl]')||{}).value||'';var finalImg=imgUrlField.trim()?imgUrlField.trim():imgSrc;var bgSrc=card.querySelector('[data-field=bg]').value;img.src=GuildUtils.driveImg(finalImg);img.style.display='';box.style.backgroundImage='url('+GuildUtils.driveImg(bgSrc)+')';img.style.transform='translate(calc(-50% + '+ox+'%),calc(-50% + '+oy+'%)) scale('+sc+')';var sv=card.querySelector('[data-scale-val]');if(sv)sv.textContent=+card.querySelector('[data-field=scale]').value||100;var oxv=card.querySelector('[data-ox-val]');if(oxv)oxv.textContent=ox;var oyv=card.querySelector('[data-oy-val]');if(oyv)oyv.textContent=oy;}
   function bindMonsterEvents(){
+    document.querySelectorAll('[data-bgm-play]').forEach(function(b){b.onclick=function(){
+      var card=b.closest('[data-monster-index]');
+      var urlField=(card.querySelector('[data-field=bgmUrl]')||{}).value||'';
+      var key=card.querySelector('[data-field=bgm]').value;
+      var target=urlField.trim()?urlField.trim():key;
+      // 実際に鳴らすファイルパスを解決して表示
+      var resolved='';
+      try{ resolved=GuildAudio.resolvePath?GuildAudio.resolvePath('bgm',target):target; }catch(e){}
+      var af=(data.settings.audioFiles||{}); var file=(af.bgm&&af.bgm[target])||af[target]||(/^https?:|\.(mp3|wav|ogg|m4a)$/i.test(target)?target:'');
+      if(!file){ toast('⚠️「'+target+'」に対応する音源が未登録です'); return; }
+      try{
+        if(window._bgmTest){ window._bgmTest.pause(); window._bgmTest=null; }
+        var src=/^https?:|\.(mp3|wav|ogg|m4a)$/i.test(file)?file:file;
+        if(window.GuildUtils&&GuildUtils.driveImg&&/drive\.google/.test(src)) src=GuildUtils.driveImg(src);
+        var a=new Audio(src); window._bgmTest=a; a.play().then(function(){ toast('▶ 再生中: '+file); }).catch(function(e){ toast('❌ 再生失敗: '+file+'（'+e.name+'）'); });
+      }catch(e){ toast('❌ エラー: '+e); }
+    };});
+    document.querySelectorAll('[data-bgm-stop]').forEach(function(b){b.onclick=function(){ if(window._bgmTest){ window._bgmTest.pause(); window._bgmTest=null; toast('■ 停止'); } };});
     document.querySelectorAll('[data-monster-toggle]').forEach(function(h){h.onclick=function(){var b=h.closest('.category-block');b.classList.toggle('open');h.querySelector('.category-toggle').textContent=b.classList.contains('open')?'閉じる':'開く';};});
     document.querySelectorAll('[data-monster-index]').forEach(function(card){['scale','offsetX','offsetY'].forEach(function(f){var el=card.querySelector('[data-field='+f+']');if(el)el.addEventListener('input',function(){updatePreview(card);});});var imgSel=card.querySelector('[data-field=image]');if(imgSel)imgSel.addEventListener('change',function(){updatePreview(card);});var imgUrlEl=card.querySelector('[data-field=imageUrl]');if(imgUrlEl)imgUrlEl.addEventListener('input',function(){updatePreview(card);});var bgSel=card.querySelector('[data-field=bg]');if(bgSel)bgSel.addEventListener('change',function(){updatePreview(card);});});
     document.querySelectorAll('[data-save-monster]').forEach(function(b){b.onclick=function(){var card=b.closest('[data-monster-index]');readMonsterCard(card);save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();toast('保存しました');var orig=b.textContent;b.textContent='✓ 保存しました';b.classList.add('green');setTimeout(function(){b.textContent=orig;b.classList.remove('green');},1400);};});
