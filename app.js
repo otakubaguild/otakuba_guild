@@ -1,6 +1,6 @@
 window.GuildApp = {VERSION:'4.0'};
 (async function(){
-  const {$}=GuildUtils; const data=await GuildStorage.init();
+  const {$}=GuildUtils; if(window.GuildTheme) await GuildTheme.init(); const data=await GuildStorage.init();
   GuildAudio.init(data.settings); GuildBattle.init(data); GuildMenu.init(data); GuildUI.renderNotice(data.settings);
   GuildApp.onSynced=function(){ try{ GuildMenu.init(data); GuildUI.renderNotice(data.settings); GuildBattle.render(); if(typeof renderParty==='function') renderParty(); }catch(e){} };
   if(data.currentCustomer) $('nameInput').value=data.currentCustomer;

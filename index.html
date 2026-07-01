@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#050505">
-  <title>おたく場ギルド</title>
-  <link rel="stylesheet" href="main.css?v=4.5">
-  <link rel="stylesheet" href="battle.css?v=4.5">
-  <link rel="stylesheet" href="menu.css?v=4.5">
-  <link rel="stylesheet" href="effects.css?v=4.5">
+  <title data-theme-title>おたく場ギルド</title>
+  <link rel="stylesheet" href="main.css?v=4.6">
+  <link rel="stylesheet" href="battle.css?v=4.6">
+  <link rel="stylesheet" href="menu.css?v=4.6">
+  <link rel="stylesheet" href="effects.css?v=4.6">
 </head>
 <body>
   <div class="app">
@@ -18,7 +18,7 @@
 
     <section class="screen active center" id="screenWelcome">
       <div class="panel window">
-        <div class="title-logo">おたく場ギルドへ<br>ようこそ</div>
+        <div class="title-logo" data-theme-html="messages.titleWelcome">おたく場ギルドへ<br>ようこそ</div>
         <div class="subtitle">メニューを開きますか？</div>
         <div class="row choice">
           <button class="btn gold" id="btnStartYes">はい</button>
@@ -30,7 +30,7 @@
 
     <section class="screen center" id="screenName">
       <div class="panel window">
-        <div class="title-logo small">冒険者登録</div>
+        <div class="title-logo small" data-theme-text="messages.registerTitle">冒険者登録</div>
         <p>冒険者名を入力してください</p>
         <input id="nameInput" placeholder="例：タロウ" autocomplete="name">
         <div class="row mt">
@@ -45,7 +45,7 @@
 
     <div id="existingOverlay" class="level-up-overlay">
       <div class="panel window" style="max-width:92vw;width:420px;max-height:80dvh;display:flex;flex-direction:column">
-        <div class="title-logo small">冒険者を選択</div>
+        <div class="title-logo small" data-theme-text="messages.selectTitle">冒険者を選択</div>
         <input id="existingSearch" placeholder="名前で検索" style="margin:6px 0">
         <div id="existingList" style="flex:1;overflow-y:auto;text-align:left;margin:8px 0"></div>
         <button class="btn" id="existingClose">閉じる</button>
@@ -54,7 +54,7 @@
 
     <section class="screen center" id="screenParty">
       <div class="panel window">
-        <div class="title-logo small">パーティ人数</div>
+        <div class="title-logo small" data-theme-text="messages.partyTitle">パーティ人数</div>
         <p>ご来店人数を選択してください</p>
         <div class="party-control">
           <button class="btn" id="btnPartyMinus" type="button">−</button>
@@ -76,7 +76,7 @@
         <div id="noticeBox"></div>
         <header class="hud">
           <div class="panel hud-card">
-            <div class="hud-title">冒険者情報</div>
+            <div class="hud-title" data-theme-text="words.adventurerInfo">冒険者情報</div>
             <div class="hud-main" id="adventurerName">---</div>
             <div class="tiny" id="adventurerSub">Lv.1 / 二つ名なし</div>
           </div>
@@ -92,6 +92,7 @@
           <div class="enemy" id="enemySprite">👾</div>
           <div class="damage" id="damagePop"></div>
           <div class="defeat" id="defeatPop">撃破！</div>
+    <div id="awakenOverlay"><div class="awaken-text">魔王が覚醒する——！</div></div>
         </main>
 
         <nav class="categories" id="categoryButtons"></nav>
@@ -178,15 +179,16 @@
     </div>
   </div>
 
-  <script src="utils.js?v=4.5"></script>
-  <script src="storage.js?v=4.5"></script>
-  <script src="audio.js?v=4.5"></script>
-  <script src="ui.js?v=4.5"></script>
-  <script src="customer.js?v=4.5"></script>
-  <script src="battle.js?v=4.5"></script>
-  <script src="discord.js?v=4.5"></script>
-  <script src="menu.js?v=4.5"></script>
-  <script src="order.js?v=4.5"></script>
-  <script src="app.js?v=4.5"></script>
+  <script src="theme.js?v=4.6"></script>
+  <script src="utils.js?v=4.6"></script>
+  <script src="storage.js?v=4.6"></script>
+  <script src="audio.js?v=4.6"></script>
+  <script src="ui.js?v=4.6"></script>
+  <script src="customer.js?v=4.6"></script>
+  <script src="battle.js?v=4.6"></script>
+  <script src="discord.js?v=4.6"></script>
+  <script src="menu.js?v=4.6"></script>
+  <script src="order.js?v=4.6"></script>
+  <script src="app.js?v=4.6"></script>
 </body>
 </html>

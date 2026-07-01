@@ -4,6 +4,17 @@ window.GuildBattle = (() => {
   function init(d){ data=d; }
   function enemy(){ if(!data) data=GuildStorage.getData(); const list=data.monsters||[]; const i=GuildUtils.clamp(data.currentEnemyIndex||0,0,Math.max(0,list.length-1)); data.currentEnemyIndex=i; return list[i]; }
   function isFinalEnemy(e){ if(!e) return false; const list=(data&&data.monsters)||GuildStorage.getData().monsters||[]; const idx=list.indexOf(e); return idx>=0 ? idx===list.length-1 : (list.length>0 && list[list.length-1] && list[list.length-1].id===e.id); }
+  // 倒した敵の「次」が最後の敵(ラスボス)なら覚醒演出の対象
+  function nextIsFinal(){ const list=(data&&data.monsters)||[]; const ni=(data.currentEnemyIndex||0)+1; return ni===list.length-1 && list.length>=2; }
+  async function playAwaken(){
+    const ov=$('awakenOverlay'); const field=$('battleField')||$('screenMain');
+    if(field) field.classList.add('awaken-shake');
+    if(ov){ ov.classList.remove('on'); void ov.offsetWidth; ov.classList.add('on'); }
+    GuildAudio.playSe('defeat');
+    await sleep(1600);
+    if(ov) ov.classList.remove('on');
+    if(field) field.classList.remove('awaken-shake');
+  }
   function bgmKey(e){ return (e&&e.bgm) || 'slime'; }
   function nextEnemy(){ const list=data.monsters||[]; if((data.currentEnemyIndex||0) < list.length-1) data.currentEnemyIndex++; const e=enemy(); if(e && Number(e.hp)<=0) e.hp=e.maxHp; GuildStorage.save(); render(); }
   let suppressBgm=false;
@@ -53,7 +64,16 @@ window.GuildBattle = (() => {
           setTimeout(()=>{ defeatPop.classList.remove('on'); if(window.GuildApp && GuildApp.showVictoryClear) GuildApp.showVictoryClear(); }, 1600);
         } else { GuildAudio.playSe('defeat'); }
         await sleep(finalBoss?2600:1350); defeatPop.classList.remove('on');
-        if(finalBoss){ done&&done(defeatedAny,finalDefeated); }else{ nextEnemy(); await sleep(650); return step(); }
+        if(finalBoss){ done&&done(defeatedAny,finalDefeated); }
+        else if(nextIsFinal()){
+          // 魔王撃破 → 次はラスボス(覚醒魔王)。覚醒演出を挟んでからBGMをdaimaouに切り替え
+          await playAwaken();
+          nextEnemy();            // 覚醒魔王へ
+          suppressBgm=false;      // 抑制を解除して
+          const be=enemy(); if(be) GuildAudio.playBgm(bgmKey(be));  // daimaou BGMを確実に鳴らす
+          await sleep(650); return step();
+        }
+        else{ nextEnemy(); await sleep(650); return step(); }
       }else{ await sleep(350); return step(); }
     }
     return step();
