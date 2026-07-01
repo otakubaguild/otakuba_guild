@@ -37,3 +37,27 @@ html,body{overflow:auto;min-height:100%;height:auto}
 .sales-table th{color:var(--gold)}
 .sales-table td:nth-child(2),.sales-table td:nth-child(3){text-align:right}
 .sales-table input[type="number"]{width:90px}.sales-table label{display:inline-flex;align-items:center;gap:4px;margin:0}.big-num{font-size:24px;font-weight:900;color:var(--gold);margin:8px 0}.sales-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sales-summary>div{padding:8px;border:1px solid rgba(246,200,79,.35);border-radius:8px;background:rgba(0,0,0,.25)}
+
+.new-product-card{
+  border:2px solid rgba(246,200,79,.75);
+  background:linear-gradient(180deg,rgba(70,42,0,.55),rgba(0,0,0,.45));
+  margin:10px 0 14px;
+  box-shadow:0 0 18px rgba(246,200,79,.16);
+}
+.new-product-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.new-product-grid label{
+  display:grid;
+  gap:4px;
+  font-size:12px;
+  color:var(--gold);
+}
+.new-product-grid textarea{
+  min-height:72px;
+}
+@media(max-width:720px){
+  .new-product-grid{grid-template-columns:1fr}
+}

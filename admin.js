@@ -23,14 +23,103 @@
       {id:'shochu_cocktail',name:'焼酎・カクテル',icon:'🍸'},
       {id:'shot_bottle',name:'ショット・ボトル',icon:'🥂'},
       {id:'soft',name:'ソフトドリンク',icon:'🥤'},
-      {id:'food',name:'フード',icon:'🍟'}
+      {id:'food',name:'フード',icon:'🍟'},
+      {id:'dessert',name:'デザート',icon:'🍰'},
+      {id:'event',name:'イベント',icon:'🎉'}
     ];
     data.settings.categories=fixed;
     return fixed;
   }
   function normalizeProduct(p,i){p=p||{};p.id=p.id||GuildUtils.uid('menu');p.cat=p.cat||p.category||'food';p.category=p.cat;p.name=p.name||'商品';p.price=Number(p.price)||0;p.emoji=p.emoji||p.icon||'🍽️';p.icon=p.emoji;p.desc=p.desc||'';p.image=p.image||'';p.hidden=!!p.hidden;p.soldOut=!!p.soldOut;p.recommended=!!p.recommended;p.limited=!!p.limited;if(p.stock===null||typeof p.stock==='undefined')p.stock='';else if(p.stock!=='')p.stock=Math.max(0,Number(p.stock)||0);p.sort=Number(p.sort||i);return p}
-  function renderMenu(){data.menu=(data.menu||[]).map(normalizeProduct);const cs=cats();const opts=cs.map(c=>`<option value="${esc(c.id)}">${esc((c.icon?c.icon+' ':'')+c.name)}</option>`).join('');$('adminContent').innerHTML=`<h2>🍴 メニュー管理</h2><div class="toolbar"><button class="btn gold" id="addProduct">商品追加</button><button class="btn green" id="saveMenu">保存</button><button class="btn" id="openAll">全部開く</button><button class="btn" id="closeAll">全部閉じる</button><button class="btn" id="jsonMode">JSON</button></div><div class="category-list">${cs.map((c,ci)=>{const items=data.menu.map((p,i)=>({p,i})).filter(x=>x.p.cat===c.id);return `<section class="category-block ${ci===0?'open':''}"><button class="category-head"><span>${esc((c.icon?c.icon+' ':'')+c.name)} <b>(${items.length})</b></span><span class="category-toggle">${ci===0?'閉じる':'開く'}</span></button><div class="category-body">${items.length?items.map(({p,i})=>productCard(p,i,opts)).join(''):'<div class="empty">なし</div>'}</div></section>`}).join('')}</div>`;
-    document.querySelectorAll('.category-head').forEach(h=>h.onclick=()=>{const b=h.closest('.category-block');b.classList.toggle('open');h.querySelector('.category-toggle').textContent=b.classList.contains('open')?'閉じる':'開く'});document.querySelectorAll('[data-menu-index]').forEach(card=>{const p=data.menu[+card.dataset.menuIndex];card.querySelector('[data-field="cat"]').value=p.cat});document.querySelectorAll('[data-del-product]').forEach(btn=>btn.onclick=()=>{if(confirm('削除しますか？')){data.menu.splice(+btn.dataset.delProduct,1);save();renderMenu()}});$('addProduct').onclick=()=>{saveMenuForm();data.menu.push(normalizeProduct({name:'新商品',cat:cs[0].id},data.menu.length));save();renderMenu()};$('saveMenu').onclick=()=>{saveMenuForm();toast('保存しました')};$('openAll').onclick=()=>toggleCats(true);$('closeAll').onclick=()=>toggleCats(false);$('jsonMode').onclick=()=>textareaEditor('menu','menu.json')}
+  function renderMenu(){
+    data.menu=(data.menu||[]).map(normalizeProduct);
+    const cs=cats();
+    const opts=cs.map(c=>`<option value="${esc(c.id)}">${esc((c.icon?c.icon+' ':'')+c.name)}</option>`).join('');
+    $('adminContent').innerHTML=`<h2>🍴 メニュー管理</h2>
+      <div class="toolbar">
+        <button class="btn gold" id="addProduct">商品追加</button>
+        <button class="btn green" id="saveMenu">保存</button>
+        <button class="btn" id="openAll">全部開く</button>
+        <button class="btn" id="closeAll">全部閉じる</button>
+        <button class="btn" id="jsonMode">JSON</button>
+      </div>
+      <div id="newProductArea"></div>
+      <div class="category-list">${cs.map((c,ci)=>{
+        const items=data.menu.map((p,i)=>({p,i})).filter(x=>x.p.cat===c.id);
+        return `<section class="category-block ${ci===0?'open':''}">
+          <button class="category-head">
+            <span>${esc((c.icon?c.icon+' ':'')+c.name)} <b>(${items.length})</b></span>
+            <span class="category-toggle">${ci===0?'閉じる':'開く'}</span>
+          </button>
+          <div class="category-body">${items.length?items.map(({p,i})=>productCard(p,i,opts)).join(''):'<div class="empty">なし</div>'}</div>
+        </section>`;
+      }).join('')}</div>`;
+
+    document.querySelectorAll('.category-head').forEach(h=>h.onclick=()=>{
+      const b=h.closest('.category-block');
+      b.classList.toggle('open');
+      h.querySelector('.category-toggle').textContent=b.classList.contains('open')?'閉じる':'開く';
+    });
+    document.querySelectorAll('[data-menu-index]').forEach(card=>{
+      const p=data.menu[+card.dataset.menuIndex];
+      card.querySelector('[data-field="cat"]').value=p.cat;
+    });
+    document.querySelectorAll('[data-del-product]').forEach(btn=>btn.onclick=()=>{
+      if(confirm('削除しますか？')){
+        data.menu.splice(+btn.dataset.delProduct,1);
+        save();
+        renderMenu();
+      }
+    });
+
+    $('addProduct').onclick=()=>showNewProductForm(opts, cs[0].id);
+    $('saveMenu').onclick=()=>{saveMenuForm();toast('保存しました')};
+    $('openAll').onclick=()=>toggleCats(true);
+    $('closeAll').onclick=()=>toggleCats(false);
+    $('jsonMode').onclick=()=>textareaEditor('menu','menu.json');
+  }
+
+  function showNewProductForm(opts, defaultCat){
+    const area=$('newProductArea');
+    area.innerHTML=`<div class="admin-card new-product-card">
+      <div class="admin-card-title">✨ 新商品追加</div>
+      <div class="new-product-grid">
+        <label>ジャンル<select id="newProductCat">${opts}</select></label>
+        <label>商品名<input id="newProductName" placeholder="例：限定カクテル"></label>
+        <label>価格<input id="newProductPrice" type="number" value="0"></label>
+        <label>絵文字<input id="newProductEmoji" value="🍽️"></label>
+        <label>画像<input id="newProductImage" placeholder="画像ファイル名またはURL"></label>
+        <label>在庫<input id="newProductStock" type="number" min="0" placeholder="空欄=無制限"></label>
+        <label class="wide-label">説明<textarea id="newProductDesc" placeholder="説明"></textarea></label>
+      </div>
+      <div class="toolbar">
+        <button class="btn gold" id="saveNewProduct">追加して保存</button>
+        <button class="btn" id="cancelNewProduct">キャンセル</button>
+      </div>
+    </div>`;
+    $('newProductCat').value=defaultCat;
+    $('newProductName').focus();
+
+    $('cancelNewProduct').onclick=()=>{area.innerHTML='';};
+    $('saveNewProduct').onclick=()=>{
+      const name=$('newProductName').value.trim();
+      if(!name){toast('商品名を入力してください');$('newProductName').focus();return;}
+      const stockVal=$('newProductStock').value;
+      const p=normalizeProduct({
+        name,
+        cat:$('newProductCat').value,
+        price:+$('newProductPrice').value||0,
+        emoji:$('newProductEmoji').value||'🍽️',
+        image:$('newProductImage').value||'',
+        stock:stockVal===''?'':Math.max(0,+stockVal||0),
+        desc:$('newProductDesc').value||''
+      },data.menu.length);
+      data.menu.unshift(p);
+      save();
+      toast('新商品を追加しました');
+      renderMenu();
+    };
+  }
   function toggleCats(o){document.querySelectorAll('.category-block').forEach(b=>{b.classList.toggle('open',o);b.querySelector('.category-toggle').textContent=o?'閉じる':'開く'})}
   function productCard(p,i,opts){return `<div class="admin-card product-edit-card" data-menu-index="${i}"><div class="admin-card-title">#${i+1} ${esc(p.name)}</div><label>商品名<input data-field="name" value="${esc(p.name)}"></label><label>ジャンル<select data-field="cat">${opts}</select></label><label>価格<input data-field="price" type="number" value="${p.price}"></label><label>絵文字<input data-field="emoji" value="${esc(p.emoji)}"></label><label>画像<input data-field="image" value="${esc(p.image)}"></label><label>在庫<input data-field="stock" type="number" min="0" placeholder="空欄=無制限" value="${p.stock===''?'':p.stock}"></label><label>説明<textarea data-field="desc">${esc(p.desc)}</textarea></label><label class="check-row"><input data-field="recommended" type="checkbox" ${p.recommended?'checked':''}>⭐おすすめ</label><label class="check-row"><input data-field="limited" type="checkbox" ${p.limited?'checked':''}>👑限定</label><label class="check-row"><input data-field="soldOut" type="checkbox" ${p.soldOut?'checked':''}>❌売切れ</label><label class="check-row"><input data-field="hidden" type="checkbox" ${p.hidden?'checked':''}>非表示</label><button class="btn red small" data-del-product="${i}">削除</button></div>`}
   function saveMenuForm(){document.querySelectorAll('[data-menu-index]').forEach(card=>{const p=data.menu[+card.dataset.menuIndex];p.name=card.querySelector('[data-field="name"]').value;p.cat=card.querySelector('[data-field="cat"]').value;p.category=p.cat;p.price=+card.querySelector('[data-field="price"]').value||0;p.emoji=card.querySelector('[data-field="emoji"]').value||'🍽️';p.icon=p.emoji;p.image=card.querySelector('[data-field="image"]').value;p.desc=card.querySelector('[data-field="desc"]').value;p.stock=card.querySelector('[data-field="stock"]').value===''?'':Math.max(0,+card.querySelector('[data-field="stock"]').value||0);p.recommended=card.querySelector('[data-field="recommended"]').checked;p.limited=card.querySelector('[data-field="limited"]').checked;p.soldOut=card.querySelector('[data-field="soldOut"]').checked;p.hidden=card.querySelector('[data-field="hidden"]').checked});data.settings.menuPushedAt=new Date().toISOString();save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();}
