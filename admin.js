@@ -238,31 +238,93 @@
     $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.discordWebhookUrl=$('setHook').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
     $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};}
   function renderConcept(){
-    $('adminContent').innerHTML='<h2>🎭 コンセプト切替</h2><div class="admin-card"><p class="tiny">コンセプトを選ぶと、店名・色・呼び名（冒険者→クルー等）・敵の構成が丸ごと入れ替わります。メニュー・顧客・売上は残ります。画像は各コンセプトのフォルダ(presets/)に置いた画像が使われます。</p></div><div id="presetList" class="grid"><div class="tiny">読み込み中...</div></div><div class="admin-card"><div class="admin-card-title">元に戻す</div><p class="tiny">選んだコンセプトを解除して、既定(theme.json)に戻します。</p><button class="btn" id="clearPreset">コンセプトを解除</button></div>';
+    const s=data.settings;
+    s.themeCustom=Object.assign({
+      startTitle:'',
+      startSubtitle:'',
+      startBg:'',
+      startBgm:'title',
+      victoryBg:'',
+      victoryImage:'victory_clear.PNG',
+      victoryTitle:'',
+      victorySubtitle:'',
+      victoryBgm:'ending',
+      masterImage:'master_no.jpeg',
+      masterMessage:'冷やかしか？さっさとメニューを開け'
+    },s.themeCustom||{});
+    const c=s.themeCustom;
+    $('adminContent').innerHTML='<h2>🎭 Game設定 / テーマエディター</h2>'+
+      '<div class="admin-card"><p class="tiny">コンセプト切替＋店舗別カスタム。ここを編集すると、スタート画面・討伐完了画面・マスター表示を管理画面だけで変更できます。画像は「画像/音源」タブでアップロードしたURLを貼れます。</p></div>'+
+      '<div class="admin-card"><div class="admin-card-title">🎬 スタート画面</div>'+
+      '<label>タイトルHTML<textarea id="tcStartTitle" placeholder="例：おたく場ギルドへ&lt;br&gt;ようこそ">'+esc(c.startTitle||'')+'</textarea></label>'+
+      '<label>サブメッセージ<input id="tcStartSubtitle" value="'+esc(c.startSubtitle||'')+'" placeholder="例：メニューを開きますか？"></label>'+
+      '<label>背景画像URL / ファイル名<input id="tcStartBg" value="'+esc(c.startBg||'')+'" placeholder="例：start_bg.png / https://..."></label>'+
+      '<label>BGMキー / URL<input id="tcStartBgm" value="'+esc(c.startBgm||'title')+'" placeholder="例：title / https://...mp3"></label>'+
+      '</div>'+
+      '<div class="admin-card"><div class="admin-card-title">🏆 討伐完了画面</div>'+
+      '<label>背景画像URL / ファイル名<input id="tcVictoryBg" value="'+esc(c.victoryBg||'')+'" placeholder="例：victory_bg.png / https://..."></label>'+
+      '<label>中央画像URL / ファイル名<input id="tcVictoryImage" value="'+esc(c.victoryImage||'victory_clear.PNG')+'" placeholder="例：victory_clear.PNG / https://..."></label>'+
+      '<label>追加タイトル<input id="tcVictoryTitle" value="'+esc(c.victoryTitle||'')+'" placeholder="例：MISSION COMPLETE"></label>'+
+      '<label>追加メッセージ<textarea id="tcVictorySubtitle" placeholder="例：ご来店ありがとうございました">'+esc(c.victorySubtitle||'')+'</textarea></label>'+
+      '<label>BGMキー / URL<input id="tcVictoryBgm" value="'+esc(c.victoryBgm||'ending')+'" placeholder="例：ending / https://...mp3"></label>'+
+      '</div>'+
+      '<div class="admin-card"><div class="admin-card-title">🧙 いいえ選択時のマスター</div>'+
+      '<label>マスター画像URL / ファイル名<input id="tcMasterImage" value="'+esc(c.masterImage||'master_no.jpeg')+'" placeholder="例：master_no.jpeg / https://..."></label>'+
+      '<label>セリフ<input id="tcMasterMessage" value="'+esc(c.masterMessage||'冷やかしか？さっさとメニューを開け')+'"></label>'+
+      '</div>'+
+      '<div class="toolbar"><button class="btn gold" id="saveThemeEditor">Game設定を保存</button><button class="btn" id="clearThemeEditor">カスタムを初期化</button></div>'+
+      '<h3>コンセプトプリセット</h3>'+
+      '<div id="presetList" class="grid"><div class="tiny">読み込み中...</div></div>'+
+      '<div class="admin-card"><div class="admin-card-title">元に戻す</div><p class="tiny">選んだコンセプトを解除して、既定(theme.json)に戻します。</p><button class="btn" id="clearPreset">コンセプトを解除</button></div>';
+
+    $('saveThemeEditor').onclick=function(){
+      s.themeCustom={
+        startTitle:$('tcStartTitle').value.trim(),
+        startSubtitle:$('tcStartSubtitle').value.trim(),
+        startBg:$('tcStartBg').value.trim(),
+        startBgm:$('tcStartBgm').value.trim()||'title',
+        victoryBg:$('tcVictoryBg').value.trim(),
+        victoryImage:$('tcVictoryImage').value.trim()||'victory_clear.PNG',
+        victoryTitle:$('tcVictoryTitle').value.trim(),
+        victorySubtitle:$('tcVictorySubtitle').value,
+        victoryBgm:$('tcVictoryBgm').value.trim()||'ending',
+        masterImage:$('tcMasterImage').value.trim()||'master_no.jpeg',
+        masterMessage:$('tcMasterMessage').value.trim()||'冷やかしか？さっさとメニューを開け'
+      };
+      save();
+      if(GuildStorage.pushCloud)GuildStorage.pushCloud();
+      toast('Game設定を保存しました');
+    };
+    $('clearThemeEditor').onclick=function(){
+      if(!confirm('スタート/討伐完了/マスターのカスタム設定を初期化しますか？'))return;
+      s.themeCustom={};
+      save();
+      if(GuildStorage.pushCloud)GuildStorage.pushCloud();
+      toast('初期化しました');
+      renderConcept();
+    };
+
     if(!window.GuildTheme){ $('presetList').innerHTML='<div class="tiny">テーマ機能が読み込まれていません</div>'; return; }
     GuildTheme.loadPresets().then(function(presets){
       if(!presets.length){ $('presetList').innerHTML='<div class="tiny">presets.json が見つかりません。GitHubに置いてください。</div>'; return; }
       $('presetList').innerHTML=presets.map(function(p,i){
         var boss=(p.enemies&&p.enemies.length)?p.enemies[p.enemies.length-1].name:'-';
         var cust=(p.theme&&p.theme.words&&p.theme.words.customer)||'';
-        var c=(p.theme&&p.theme.color)||{};
-        return '<div class="admin-card" style="border-color:'+(c.gold||'#f6c84f')+'"><div class="admin-card-title">'+esc(p.label||p.id)+'</div>'+
+        var c2=(p.theme&&p.theme.color)||{};
+        return '<div class="admin-card" style="border-color:'+(c2.gold||'#f6c84f')+'"><div class="admin-card-title">'+esc(p.label||p.id)+'</div>'+
           '<div class="tiny">呼び名: '+esc(cust)+' ／ ラスボス: '+esc(boss)+' ／ 敵 '+((p.enemies||[]).length)+'体</div>'+
-          '<div style="display:flex;gap:6px;margin:8px 0">'+['gold','green','red','white'].map(function(k){return '<span style="width:22px;height:22px;border-radius:50%;background:'+(c[k]||'#888')+';border:1px solid #0008"></span>';}).join('')+'</div>'+
+          '<div style="display:flex;gap:6px;margin:8px 0">'+['gold','green','red','white'].map(function(k){return '<span style="width:22px;height:22px;border-radius:50%;background:'+(c2[k]||'#888')+';border:1px solid #0008"></span>';}).join('')+'</div>'+
           '<button class="btn gold" data-apply-preset="'+i+'">このコンセプトにする</button></div>';
       }).join('');
       document.querySelectorAll('[data-apply-preset]').forEach(function(btn){
         btn.onclick=function(){
           var p=presets[+btn.dataset.applyPreset];
-          if(!confirm('「'+(p.label||p.id)+'」に切り替えますか？\n\n・店名/色/呼び名が変わります\n・敵の構成が'+((p.enemies||[]).length)+'体に入れ替わります（今の敵設定は上書き）\n・メニュー/顧客/売上は残ります\n\n画像は presets/'+p.id+'/ に置いた画像が使われます。'))return;
-          // テーマ適用
+          if(!confirm('「'+(p.label||p.id)+'」に切り替えますか？\n\n・店名/色/呼び名が変わります\n・敵の構成が'+((p.enemies||[]).length)+'体に入れ替わります（今の敵設定は上書き）\n・メニュー/顧客/売上は残ります'))return;
           GuildTheme.applyPresetTheme(p);
-          // 敵設定を入れ替え
           if(Array.isArray(p.enemies)){
             data.monsters=p.enemies.map(function(e,idx){ return normalizeMonster({ id:GuildUtils.uid('enemy'), name:e.name, stage:e.stage, maxHp:e.maxHp, hp:e.maxHp, bg:e.bg, image:e.image, bgm:e.bgm, scale:e.scale||100, offsetX:e.offsetX||0, offsetY:e.offsetY||0 }, idx); });
             data.currentEnemyIndex=0;
           }
-          // 店名を設定にも反映
           if(p.theme&&p.theme.brand&&p.theme.brand.shopName){ data.settings.shopName=p.theme.brand.shopName; }
           save(); if(GuildStorage.pushCloud)GuildStorage.pushCloud();
           toast('「'+(p.label||p.id)+'」に切り替えました');
@@ -271,7 +333,6 @@
     });
     $('clearPreset').onclick=function(){ if(!confirm('コンセプトを解除して既定に戻しますか？'))return; GuildTheme.clearOverride(); toast('解除しました。再読み込みで既定に戻ります'); };
   }
-
   function renderQR(){
     const s=data.settings||{};
     const base=(location.origin+location.pathname.replace(/\/admin\.html$/,'/'));
@@ -526,6 +587,6 @@
     $('resetDailyReports').onclick=resetDailyReports;
     $('resetAllLocal').onclick=resetAllLocal;
   }
-  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v4.0 店舗管理</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='concept')renderConcept(); if(current==='qr')renderQR(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
+  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v5.5 Game体験型メニュー</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='concept')renderConcept(); if(current==='qr')renderQR(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
   loginOk()?showApp():showLogin();
 })();

@@ -122,10 +122,12 @@ window.GuildStorage = (() => {
       },
       bgmVolume:0.45,seVolume:0.9,
       notice:{enabled:true,title:'本日のお知らせ',body:'',position:'top'},
+      themeCustom:{startTitle:'',startSubtitle:'',startBg:'',startBgm:'title',victoryBg:'',victoryImage:'victory_clear.PNG',victoryTitle:'',victorySubtitle:'',victoryBgm:'ending',masterImage:'master_no.jpeg',masterMessage:'冷やかしか？さっさとメニューを開け'},
       business:{open:false,openedAt:'',closedAt:'',dailyReports:[]}
     }, defaults.settings || {});
     data.settings.notice = Object.assign({enabled:true,title:'本日のお知らせ',body:'',position:'top'}, data.settings.notice || {});
     data.settings.business = Object.assign({open:false,openedAt:'',closedAt:'',dailyReports:[]}, data.settings.business || {});
+    data.settings.themeCustom = Object.assign({startTitle:'',startSubtitle:'',startBg:'',startBgm:'title',victoryBg:'',victoryImage:'victory_clear.PNG',victoryTitle:'',victorySubtitle:'',victoryBgm:'ending',masterImage:'master_no.jpeg',masterMessage:'冷やかしか？さっさとメニューを開け'}, data.settings.themeCustom || {});
     if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
 
     const existing = get(keys.state, null);
@@ -151,6 +153,7 @@ window.GuildStorage = (() => {
     data.sales.forEach(s=>{ if(s && s.type==='checkout' && !s.accountingMonth) s.accountingMonth = String(s.time||new Date().toISOString()).slice(0,7); });
     data.activeBill = Array.isArray(data.activeBill)?data.activeBill:[];
     data.settings.business = Object.assign({open:false,openedAt:'',closedAt:'',dailyReports:[]}, data.settings.business || {});
+    data.settings.themeCustom = Object.assign({startTitle:'',startSubtitle:'',startBg:'',startBgm:'title',victoryBg:'',victoryImage:'victory_clear.PNG',victoryTitle:'',victorySubtitle:'',victoryBgm:'ending',masterImage:'master_no.jpeg',masterMessage:'冷やかしか？さっさとメニューを開け'}, data.settings.themeCustom || {});
     if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
