@@ -3,7 +3,7 @@
   if(window.GuildTheme) await GuildTheme.init();
   const data = await GuildStorage.init();
   const SESSION='otakuba.v3.final.admin.session';
-  const tabs=[['dash','📊 概要'],['business','🟢 営業'],['menu','🍴 メニュー'],['inventory','📦 在庫'],['monsters','⚔️ 討伐'],['settings','⚙️ 設定'],['concept','🎭 コンセプト'],['customers','👤 顧客'],['sales','💰 売上管理'],['upload','🖼️ 画像/音源'],['sync','☁️ 同期'],['reset','🧹 reset']];
+  const tabs=[['dash','📊 概要'],['business','🟢 営業'],['menu','🍴 メニュー'],['inventory','📦 在庫'],['monsters','⚔️ 討伐'],['settings','⚙️ 設定'],['concept','🎭 コンセプト'],['qr','🔳 QR'],['customers','👤 顧客'],['sales','💰 売上管理'],['upload','🖼️ 画像/音源'],['sync','☁️ 同期'],['reset','🧹 reset']];
   let current='dash', customerQuery='', salesQuery='';
   function loginOk(){return sessionStorage.getItem(SESSION)==='ok'} function showLogin(){$('adminLogin').classList.remove('hidden');$('adminApp').classList.add('hidden')} function showApp(){$('adminLogin').classList.add('hidden');$('adminApp').classList.remove('hidden');renderTabs();render();startAutoRefresh()}
   let autoTimer=null;
@@ -271,6 +271,57 @@
     });
     $('clearPreset').onclick=function(){ if(!confirm('コンセプトを解除して既定に戻しますか？'))return; GuildTheme.clearOverride(); toast('解除しました。再読み込みで既定に戻ります'); };
   }
+
+  function renderQR(){
+    const s=data.settings||{};
+    const base=(location.origin+location.pathname.replace(/\/admin\.html$/,'/'));
+    const storeUrl=s.storeId ? (base+'?store='+encodeURIComponent(s.storeId)) : '';
+    const gasUrl=s.gasUrl ? (base+'?gas='+encodeURIComponent(s.gasUrl)) : '';
+    const activeUrl=storeUrl||gasUrl||base;
+    const qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=360x360&data='+encodeURIComponent(activeUrl);
+    $('adminContent').innerHTML='<h2>🔳 QRコード管理</h2>'+
+      '<div class="admin-card"><p class="tiny">店舗IDを使う場合は stores.json に店舗IDとGAS URLを登録します。すぐ使うならGAS直指定URLでもOKです。</p></div>'+
+      '<div class="admin-card">'+
+      '<label>店舗ID（推奨）<input id="qrStoreId" value="'+esc(s.storeId||'')+'" placeholder="例：otakuba"></label>'+
+      '<label>GAS URL<input id="qrGasUrl" value="'+esc(s.gasUrl||'')+'" placeholder="https://script.google.com/.../exec"></label>'+
+      '<label>QRにするURL<select id="qrMode"><option value="store" '+(storeUrl?'selected':'')+'>店舗ID方式（?store=）</option><option value="gas" '+(!storeUrl?'selected':'')+'>GAS直指定方式（?gas=）</option></select></label>'+
+      '<div class="toolbar"><button class="btn gold" id="saveQrSettings">保存してQR更新</button></div>'+
+      '</div>'+
+      '<div class="admin-card qr-card"><div class="admin-card-title">表示用QR</div>'+
+      '<input id="qrUrlText" readonly value="'+esc(activeUrl)+'">'+
+      '<div class="qr-box"><img id="qrImg" src="'+qrSrc+'" alt="QRコード"></div>'+
+      '<div class="toolbar"><button class="btn" id="copyQrUrl">URLコピー</button><button class="btn" id="openQrUrl">開く</button><a class="btn gold" id="downloadQr" href="'+qrSrc+'" download="game-menu-qr.png">QR保存</a></div>'+
+      '</div>'+
+      '<div class="admin-card"><div class="admin-card-title">印刷メモ</div><p class="tiny">QRを保存して、テーブルPOPやメニュー表に貼って使えます。店舗ID方式ならURLが短く、GAS直指定方式なら stores.json 編集なしで使えます。</p></div>';
+
+    function refresh(){
+      const sid=$('qrStoreId').value.trim();
+      const gas=$('qrGasUrl').value.trim();
+      const mode=$('qrMode').value;
+      const url=(mode==='store'&&sid)?(base+'?store='+encodeURIComponent(sid)):(gas?(base+'?gas='+encodeURIComponent(gas)):base);
+      $('qrUrlText').value=url;
+      const src='https://api.qrserver.com/v1/create-qr-code/?size=360x360&data='+encodeURIComponent(url);
+      $('qrImg').src=src;
+      $('downloadQr').href=src;
+    }
+    $('qrStoreId').oninput=refresh;
+    $('qrGasUrl').oninput=refresh;
+    $('qrMode').onchange=refresh;
+    $('saveQrSettings').onclick=function(){
+      s.storeId=$('qrStoreId').value.trim();
+      s.gasUrl=$('qrGasUrl').value.trim();
+      save();
+      if(GuildStorage.pushCloud)GuildStorage.pushCloud();
+      refresh();
+      toast('QR設定を保存しました');
+    };
+    $('copyQrUrl').onclick=async function(){
+      try{ await navigator.clipboard.writeText($('qrUrlText').value); toast('コピーしました'); }
+      catch(e){ $('qrUrlText').select(); toast('URLを選択しました'); }
+    };
+    $('openQrUrl').onclick=function(){ window.open($('qrUrlText').value,'_blank'); };
+  }
+
   function renderUpload(){
     $('adminContent').innerHTML=`<h2>🖼️ 画像 / 音源アップロード</h2>
     <div class="admin-card"><div class="tiny">敵画像・背景・BGM・メニュー写真をここからアップできます。アップ後に出るURLを、各編集画面の「画像」欄や「BGM」欄に貼れば使えます。</div></div>
@@ -475,6 +526,6 @@
     $('resetDailyReports').onclick=resetDailyReports;
     $('resetAllLocal').onclick=resetAllLocal;
   }
-  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v4.0 店舗管理</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='concept')renderConcept(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
+  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v4.0 店舗管理</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='concept')renderConcept(); if(current==='qr')renderQR(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
   loginOk()?showApp():showLogin();
 })();

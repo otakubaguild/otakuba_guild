@@ -1,0 +1,11 @@
+{
+  "_comment": "店舗ID方式のQRで使う設定です。?store=otakuba のように開くと、このGAS URLを使います。",
+  "stores": {
+    "otakuba": {
+      "label": "おたく場ギルド",
+      "gasUrl": "",
+      "discordWebhookUrl": "",
+      "storeName": "おたく場ギルド"
+    }
+  }
+}

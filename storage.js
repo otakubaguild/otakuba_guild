@@ -110,7 +110,7 @@ window.GuildStorage = (() => {
       currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1
     };
     defaults.settings = Object.assign({
-      currency:'G', coverCharge:500, levelStep:3000, adminPassword:'OTAKU', notifyOn:true, gasUrl:'', discordWebhookUrl:'',
+      currency:'G', coverCharge:500, levelStep:3000, adminPassword:'OTAKU', notifyOn:true, gasUrl:'', discordWebhookUrl:'', storeId:'',
       categories:[
         {id:'beer_sour', name:'ビール・サワー', icon:'🍺'}, {id:'shochu_cocktail', name:'焼酎・カクテル', icon:'🍸'},
         {id:'shot_bottle', name:'ショット・ボトル', icon:'🥂'}, {id:'soft', name:'ソフトドリンク', icon:'🥤'},
@@ -273,5 +273,17 @@ window.GuildStorage = (() => {
   function getData(){ return data; }
   function replace(part, value){ data[part]=value; save(); }
   function markSaleDeleted(s){ const id=saleKey(s); if(!id)return; data.deletedSaleIds=data.deletedSaleIds||[]; if(!data.deletedSaleIds.includes(id)) data.deletedSaleIds.push(id); }
-  return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud, markSaleDeleted};
+  
+  function qrBaseUrl(){
+    try{ return location.origin + location.pathname.replace(/\/(admin\.html|index\.html)?$/,'/'); }
+    catch(e){ return ''; }
+  }
+  function qrUrlForStore(storeId){
+    return qrBaseUrl() + '?store=' + encodeURIComponent(storeId||'');
+  }
+  function qrUrlForGas(gasUrl){
+    return qrBaseUrl() + '?gas=' + encodeURIComponent(gasUrl||'');
+  }
+
+return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud, markSaleDeleted, qrUrlForStore, qrUrlForGas};
 })();

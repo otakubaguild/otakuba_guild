@@ -55,3 +55,24 @@ html,body{overflow:auto;min-height:100%;height:auto}
   border-radius:10px;
   background:rgba(0,0,0,.35);
 }
+
+
+.qr-card{text-align:center}
+.qr-box{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:14px;
+  margin:10px auto;
+  background:#fff;
+  border-radius:12px;
+  max-width:390px;
+}
+.qr-box img{
+  width:min(72vw,360px);
+  height:auto;
+  image-rendering:auto;
+}
+#qrUrlText{
+  font-size:12px;
+}
