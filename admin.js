@@ -227,13 +227,15 @@
     '<label>管理パスワード<input id="setPass" value="'+esc(s.adminPassword||'OTAKU')+'"></label>'+
     '<label class="check-row"><input id="setNotify" type="checkbox" '+(s.notifyOn!==false?'checked':'')+'>通知ON</label>'+
     '<label>GAS URL<input id="setGas" value="'+esc(s.gasUrl||'')+'" placeholder="https://script.google.com/.../exec"></label>'+
+    '<label>Discord通知URL（この店の通知先）<input id="setHook" value="'+esc(s.discordWebhookUrl||'')+'" placeholder="https://discord.com/api/webhooks/..."></label>'+
+    '<div class="tiny">Discordのチャンネル設定→連携サービス→ウェブフックで作ったURLを貼ると、注文/会計の通知がその店のDiscordに届きます。空欄ならGAS側の設定が使われます。</div>'+
     '</div><div class="admin-card notice-admin"><div class="admin-card-title">📢 本日のお知らせ</div>'+
     '<label class="check-row"><input id="noticeEnabled" type="checkbox" '+(s.notice.enabled!==false?'checked':'')+'>一般画面に表示する</label>'+
     '<label>見出し<input id="noticeTitle" value="'+esc(s.notice.title||'本日のお知らせ')+'"></label>'+
     '<label>本文<textarea id="noticeBody" placeholder="例：本日は20時からイベントクエスト開催！">'+esc(s.notice.body||'')+'</textarea></label>'+ 
     '<label>表示位置<select id="noticePosition"><option value="top" '+(s.notice.position!=='bottom'?'selected':'')+'>上に表示</option><option value="bottom" '+(s.notice.position==='bottom'?'selected':'')+'>下に表示</option></select></label>'+ 
     '</div><div class="toolbar"><button class="btn green" id="saveSettings">保存</button><button class="btn" id="jsonSettings">詳細JSON</button></div>';
-    $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
+    $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.discordWebhookUrl=$('setHook').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
     $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};}
   function renderConcept(){
     $('adminContent').innerHTML='<h2>🎭 コンセプト切替</h2><div class="admin-card"><p class="tiny">コンセプトを選ぶと、店名・色・呼び名（冒険者→クルー等）・敵の構成が丸ごと入れ替わります。メニュー・顧客・売上は残ります。画像は各コンセプトのフォルダ(presets/)に置いた画像が使われます。</p></div><div id="presetList" class="grid"><div class="tiny">読み込み中...</div></div><div class="admin-card"><div class="admin-card-title">元に戻す</div><p class="tiny">選んだコンセプトを解除して、既定(theme.json)に戻します。</p><button class="btn" id="clearPreset">コンセプトを解除</button></div>';
