@@ -237,6 +237,59 @@
     '</div><div class="toolbar"><button class="btn green" id="saveSettings">保存</button><button class="btn" id="jsonSettings">詳細JSON</button></div>';
     $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.discordWebhookUrl=$('setHook').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
     $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};if($('resetSetupWizard'))$('resetSetupWizard').onclick=function(){s.setupDone=false;save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();toast('次回、初回セットアップを表示します');};}
+
+  function conceptTemplateFromPreset(p){
+    p=p||{};
+    const id=p.id||'';
+    const t=p.theme||{};
+    const assets=(t.assets||p.assets||{});
+    const messages=t.messages||{};
+    const enemies=Array.isArray(p.enemies)?p.enemies:[];
+    const first=enemies[0]||{};
+    const last=enemies.length?enemies[enemies.length-1]:{};
+    const folder=id?('presets/'+id+'/'):'';
+
+    function val(){
+      for(var i=0;i<arguments.length;i++){
+        var v=arguments[i];
+        if(v!==undefined && v!==null && String(v).trim()!=='') return v;
+      }
+      return '';
+    }
+    function asset(name, fallback){
+      var v=val(assets[name], fallback);
+      if(!v) return '';
+      // URLや既存ファイル名はそのまま。プリセット用の相対名だけ presets/<id>/ を付ける。
+      if(/^https?:/i.test(v) || v.indexOf('/')>=0 || !folder) return v;
+      return folder+v;
+    }
+
+    return {
+      startTitle: val(messages.titleWelcome, (t.brand&&t.brand.shopName? t.brand.shopName+'へ<br>ようこそ' : '')),
+      startSubtitle: val(messages.openMenu, 'メニューを開きますか？'),
+      startBg: asset('startBg', asset('welcomeBg', first.bg||'')),
+      startBgm: val(assets.startBgm, assets.titleBgm, 'title'),
+
+      victoryBg: asset('victoryBg', asset('clearBg', last.bg||'')),
+      victoryImage: asset('victoryImage', asset('clearImage', 'victory_clear.PNG')),
+      victoryTitle: val(messages.victoryTitle, messages.clearTitle, ''),
+      victorySubtitle: val(messages.victorySubtitle, messages.peace, ''),
+      victoryBgm: val(assets.victoryBgm, assets.clearBgm, 'ending'),
+
+      masterName: val((t.brand&&t.brand.masterName), 'ギルドマスター'),
+      masterImage: asset('masterImage', (t.brand&&t.brand.masterImage)||'master_no.jpeg'),
+      masterMessage: val(messages.masterDefault, '冷やかしか？さっさとメニューを開け')
+    };
+  }
+
+  function applyConceptTemplateToSettings(p){
+    data.settings.themeCustom=Object.assign({}, data.settings.themeCustom||{}, conceptTemplateFromPreset(p));
+    if(p && p.theme && p.theme.brand && p.theme.brand.shopName){
+      data.settings.shopName=p.theme.brand.shopName;
+      data.settings.storeName=p.theme.brand.shopName;
+    }
+  }
+
   function renderConcept(){
     const s=data.settings;
     s.themeCustom=Object.assign({
@@ -323,6 +376,7 @@
           var p=presets[+btn.dataset.applyPreset];
           if(!confirm('「'+(p.label||p.id)+'」に切り替えますか？\n\n・店名/色/呼び名が変わります\n・敵の構成が'+((p.enemies||[]).length)+'体に入れ替わります（今の敵設定は上書き）\n・メニュー/顧客/売上は残ります'))return;
           GuildTheme.applyPresetTheme(p);
+          applyConceptTemplateToSettings(p);
           if(Array.isArray(p.enemies)){
             data.monsters=p.enemies.map(function(e,idx){ return normalizeMonster({ id:GuildUtils.uid('enemy'), name:e.name, stage:e.stage, maxHp:e.maxHp, hp:e.maxHp, bg:e.bg, image:e.image, bgm:e.bgm, scale:e.scale||100, offsetX:e.offsetX||0, offsetY:e.offsetY||0 }, idx); });
             data.currentEnemyIndex=0;

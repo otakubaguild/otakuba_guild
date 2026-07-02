@@ -66,6 +66,46 @@ window.GuildApp = {VERSION:'4.0'};
   }
   function hideMasterMessage(){ const box=$('masterMessageBox'); if(box) box.style.display='none'; }
   
+
+  function conceptTemplateFromPresetApp(p){
+    p=p||{};
+    const id=p.id||'';
+    const t=p.theme||{};
+    const assets=(t.assets||p.assets||{});
+    const messages=t.messages||{};
+    const enemies=Array.isArray(p.enemies)?p.enemies:[];
+    const first=enemies[0]||{};
+    const last=enemies.length?enemies[enemies.length-1]:{};
+    const folder=id?('presets/'+id+'/'):'';
+    function val(){
+      for(let i=0;i<arguments.length;i++){
+        const v=arguments[i];
+        if(v!==undefined && v!==null && String(v).trim()!=='') return v;
+      }
+      return '';
+    }
+    function asset(name, fallback){
+      let v=val(assets[name], fallback);
+      if(!v) return '';
+      if(/^https?:/i.test(v) || String(v).includes('/') || !folder) return v;
+      return folder+v;
+    }
+    return {
+      startTitle: val(messages.titleWelcome, (t.brand&&t.brand.shopName? t.brand.shopName+'へ<br>ようこそ' : '')),
+      startSubtitle: val(messages.openMenu, 'メニューを開きますか？'),
+      startBg: asset('startBg', asset('welcomeBg', first.bg||'')),
+      startBgm: val(assets.startBgm, assets.titleBgm, 'title'),
+      victoryBg: asset('victoryBg', asset('clearBg', last.bg||'')),
+      victoryImage: asset('victoryImage', asset('clearImage', 'victory_clear.PNG')),
+      victoryTitle: val(messages.victoryTitle, messages.clearTitle, ''),
+      victorySubtitle: val(messages.victorySubtitle, messages.peace, ''),
+      victoryBgm: val(assets.victoryBgm, assets.clearBgm, 'ending'),
+      masterName: val((t.brand&&t.brand.masterName), 'ギルドマスター'),
+      masterImage: asset('masterImage', (t.brand&&t.brand.masterImage)||'master_no.jpeg'),
+      masterMessage: val(messages.masterDefault, '冷やかしか？さっさとメニューを開け')
+    };
+  }
+
   function wizardVal(id){ const el=$(id); return el ? el.value.trim() : ''; }
   function fillSetupWizard(){
     const c=themeCustom();
@@ -120,19 +160,20 @@ window.GuildApp = {VERSION:'4.0'};
     if(!storeName){ GuildUI.toast('店舗名を入力してください'); return; }
     if(!gasUrl){ GuildUI.toast('GAS URLを入力してください'); return; }
     await applySetupPreset(wizardVal('setupTheme'));
+    const presetTc=data.settings.themeCustom||{};
     const themeCustom={
-      startTitle:wizardVal('setupStartTitle'),
-      startSubtitle:wizardVal('setupStartSubtitle'),
-      startBg:wizardVal('setupStartBg'),
-      startBgm:wizardVal('setupStartBgm')||'title',
-      masterName:wizardVal('setupMasterName')||'ギルドマスター',
-      masterImage:wizardVal('setupMasterImage')||'master_no.jpeg',
-      masterMessage:wizardVal('setupMasterMessage')||'冷やかしか？さっさとメニューを開け',
-      victoryBg:wizardVal('setupVictoryBg'),
-      victoryImage:wizardVal('setupVictoryImage')||'victory_clear.PNG',
-      victoryTitle:wizardVal('setupVictoryTitle'),
-      victorySubtitle:($('setupVictorySubtitle')?$('setupVictorySubtitle').value:''),
-      victoryBgm:wizardVal('setupVictoryBgm')||'ending'
+      startTitle:wizardVal('setupStartTitle')||presetTc.startTitle||'',
+      startSubtitle:wizardVal('setupStartSubtitle')||presetTc.startSubtitle||'',
+      startBg:wizardVal('setupStartBg')||presetTc.startBg||'',
+      startBgm:wizardVal('setupStartBgm')||presetTc.startBgm||'title',
+      masterName:wizardVal('setupMasterName')||presetTc.masterName||'ギルドマスター',
+      masterImage:wizardVal('setupMasterImage')||presetTc.masterImage||'master_no.jpeg',
+      masterMessage:wizardVal('setupMasterMessage')||presetTc.masterMessage||'冷やかしか？さっさとメニューを開け',
+      victoryBg:wizardVal('setupVictoryBg')||presetTc.victoryBg||'',
+      victoryImage:wizardVal('setupVictoryImage')||presetTc.victoryImage||'victory_clear.PNG',
+      victoryTitle:wizardVal('setupVictoryTitle')||presetTc.victoryTitle||'',
+      victorySubtitle:($('setupVictorySubtitle')?$('setupVictorySubtitle').value:'')||presetTc.victorySubtitle||'',
+      victoryBgm:wizardVal('setupVictoryBgm')||presetTc.victoryBgm||'ending'
     };
     GuildStorage.completeInitialSetup({
       storeName,
